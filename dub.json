@@ -1,0 +1,13 @@
+{
+	"name": "fp",
+	"description": "A simple vibe.d server application.",
+
+
+	"copyright": "Copyright © 2015, Stefan Koch",
+
+	"authors": ["Stefan Koch"],
+	"dependencies": {
+		"vibe-d": "0.7.22"
+	},
+	"versions": ["VibeDefaultMain"]
+}

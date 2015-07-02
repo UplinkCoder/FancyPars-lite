@@ -1,0 +1,180 @@
+import fancy_token;
+import fancy_lexer;
+import fancy_parser;
+import fancy_genPars;
+import fancy_genAST;
+import fancy_ast;
+import biginput;
+import std.stdio;
+import fancy_genLex;
+
+import fancy_grammar;
+import std.algorithm:filter,map;
+
+void _main_(string[] args) {
+
+	static immutable parsed_static = parse(lex(`
+ASTNode {
+	Identifier @internal {
+		[a-zA-Z_][] identifier
+	}
+
+	Group @parent {
+		Identifier name, ? "@" : Identifier annotation, "{",
+ 			Group[] groups / PatternElement[] elements : ",", "}"
+		}	
+	
+	PatternElement @internal {
+		
+		AlternativeElement {
+			PatternElement[] alternatives : "/"
+		}
+		
+		LexerElement {
+		
+			StringElement {
+				"\"", char[] string_, "\""
+			}
+
+			NamedChar {
+				"char", ? "[]" : bool isArray, Identifier name
+			}
+
+			CharRange @internal {
+				char rangeBegin,  ? "-" : char RangeEnd
+			}
+
+			RangeElement {
+				"[", CharRange[] ranges, "]"
+			}
+
+			LookbehindElement {
+				"?lb", "(", StringElement str, ")"
+			}
+			
+			NotElement {
+				"!", LexerElement ce
+			}
+
+		}
+
+		ParenElement {
+			"(", PatternElement[] elements : "," , ")" 
+		}
+
+		NamedElement {
+			Identifier type,  ? "[]" : bool isArray, Identifier name, 
+			? bool isArray : ? ":" : StringElement lst_sep
+		}
+		
+		FlagElement {
+			"bool", Identifier flag_name
+		}
+
+		QueryElement {
+			"?", "bool", Identifier flag_name, ":", PatternElement elem
+		}
+		
+		OptionalElement {
+			"?", LexerElement[] ce : ",", ":", PatternElement elem
+		}
+		
+
+	}
+}`));
+
+	static immutable kalgrm = `
+KlaNode {
+	Identifier @internal {
+		[a-zA-Z][] identifier
+	}
+	
+	Operator @internal {
+		Add {"+"}
+		Sub {"-"}
+		Mul {"*"}
+		Div {"/"}
+	}
+
+	Statement {
+		Def {
+			"def", Identifier fname, "(", Expression[] params : ",", ")",
+			Statement[] fbody
+		}
+
+		If {
+			"if", Expression cond, "then", Expression thn,
+			? "else" : Expression els
+		}
+
+		ExternDef {
+			"extern", Identifier fname, "(", Expression[] params, ")"
+		}
+	}
+
+
+	Expression {
+		Float @internal {
+				[0-9][] intp, ? "." : [0-9][] fractp
+		}
+
+		ParenExpr  {
+			"(", Expression expr, ")"
+		}
+
+		Primarey @internal {
+			ParenExpr expr / Float val / Identifier var
+		}
+
+		BinaryExpression {
+			Expression lhs, Operator op, Primarey rhs
+		}
+	}
+
+}`.lex.parse;
+//	16/4/4 == 1
+//	((16)/4)/4
+// ((a + b) * c) + d
+// LEFT TO RIGHT IS WHAT YOU WANT
+//  BinaryExpression NEEDS LOOKAHEAD OF 3 TOKENS
+//	static immutable parsed_static_big = parse(lex(bigInput));
+	static immutable ast_ = genAST((cast(Group)parsed_static).getAllGroups);
+	if (args.length==2) {
+		import std.file;
+		
+		auto parsed = (parse(lex(readText(args[1]))));
+
+		auto test_cbor = File("test.cbor","wab");
+
+		//test_cbor.writeln(cborBuffer);
+
+		auto ast = File(args[1][0..$-4] ~ "__ast.d","awb");
+		auto parser = File(args[1][0..$-4] ~ "__parser.d","awb");
+
+		parser.writeln(genPars(parsed.getAllGroups));
+		ast.writeln(genAST(parsed.getAllGroups));	
+	}
+
+	import fancy_genVisitor;
+	import std.array;
+	File printer = File("fancy_printer.d","awb");
+//	auto app = Appender!(ubyte[])();
+  dchar[] x;
+//	auto encoded =  jsonEncode(kalgrm,x);
+
+	//writeln(ast_);
+	//import fancy_printer;
+	//string str = (print(parsed_static));
+	//writeln(str);
+
+	writeln((parsed_static).getAllGroups.genAST(parsed_static.getAllGroups[0]));
+	writeln((kalgrm).getAllGroups.genPars);
+  writeln((kalgrm).getAllGroups.getDirectLeftRecursiveGroups.map!(a => a.name.identifier));
+	genLex(parsed_static.getAllGroups);
+	genPars(parsed_static.getAllGroups);
+	debug {
+
+	}
+	readln;
+
+}
