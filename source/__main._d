@@ -18,7 +18,31 @@ ASTNode {
 	Identifier @internal {
 		[a-zA-Z_][] identifier
 	}
-
+/* TODO 
+	add processing rules in a register-machine-vm
+ inputs :
+	- char-slice of matched rule
+	- rule that matched
+	- accsess to previous and next chars (lookahead and behind)
+ output : - parse-(sub)-tree
+ 	  - (optionsl) prioritized list of next rules to try
+ 	  
+ programm definition : 
+ 	- intrinsic UTF8 decoding
+ 	- Acsesses input and parsetree
+ 	- can do math on UTF8 values directly via math-intrinsics
+ 	Example for numbers :
+ 	$ represents the last position of the last char matched by current rule
+ 	int curpos = $;
+ 	unlimited_int number;
+ 	loop :
+ 		number += pow(([curpos]-'0'),(10*($-curpos)+1),10);
+ 		if (curpos == 0) 
+ 			return number;
+ 		else
+ 			goto loop;
+ 		
+*/ 	
 	Group @parent {
 		Identifier name, ? "@" : Identifier annotation, "{",
  			Group[] groups / PatternElement[] elements : ",", "}"
