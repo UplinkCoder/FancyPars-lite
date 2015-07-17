@@ -44,7 +44,7 @@ auto disambiguationElements(const Group grp, const (Group)[] allGroups) {
 }
 
 bool isDirectLeftRecursive (const Group g) {
-	bool isDirectLeftRecursive_(const NamedElement ne, const Group p) {
+	bool isDirectLeftRecursive_(const NamedElement ne, const Group p) pure {
 		return (ne.type == p.name || (p.parent && isDirectLeftRecursive_(ne, p.parent)));
 	}
 
