@@ -7,15 +7,15 @@ import std.conv;
 
 pure :
 
-extern string genPars(const (Group[]) allGroups) {
+extern string genPars(const (Group[]) allGroups) pure {
 	char[] result;
-
-
+	auto pg = ParserGenerator(allGroups);
+	
 	foreach(group;allGroups) {
-		result ~= ParserGenerator(allGroups).genParse(group);
+		result ~= pg.genParse(group);
 	}
 
-	return ParserGenerator(allGroups).genIsMethods() ~"\n"~ result;
+	return pg.genIsMethods() ~"\n"~ result;
 
 }
 
@@ -53,6 +53,7 @@ pure :
 
 	string genIsMethods() {
 		char[] result;
+		
 		foreach(pG;allGroups.getParentGroups.filter!(g => !g.hasAnnotation("noFirst"))) {
 			result ~= "\n" ~ "bool is".indentBy(2) 
 				~ pG.name.identifier
@@ -70,7 +71,7 @@ pure :
 			foreach(cG; ocGS.filter!(g => !g.hasGroups)) {
 				result ~= "\n" ~ "bool is".indentBy(2) 
 					~  cG.name.identifier ~	"() {\n" 
-						~ "return ".indentBy(3);
+					~ "return ".indentBy(3);
 				auto disambiguationElements_ = assumePure(&disambiguationElements);
 				
 				auto daea = disambiguationElements_(cG, allGroups);
@@ -134,9 +135,15 @@ pure :
 			return "";
 		}
 		char[] result;
-		result = group.name.identifier.indentBy(iLvl)
+		if (isDirectLeftRecursive(group)) {
+			result = group.name.identifier.indentBy(iLvl)
 			~ " parse" ~ group.name.identifier
-	    ~ "() {\n"; // << LeftRecrsiveGroups require paramters here
+	    ~ "(bool inRecursion) {\n";
+		} else {
+			result = group.name.identifier.indentBy(iLvl)
+			~ " parse" ~ group.name.identifier
+	    ~ "() {\n";
+		}
 		iLvl++;
 	  
 	  //TODO LeftRecursionSpecialHandling

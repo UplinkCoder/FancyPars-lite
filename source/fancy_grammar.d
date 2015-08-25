@@ -1,4 +1,5 @@
 module fancy_grammar;
+import fancy_util;
 import fancy_ast;
 import std.conv;
 import std.traits;
@@ -43,8 +44,13 @@ auto disambiguationElements(const Group grp, const (Group)[] allGroups) {
 	return splitOptionals([grp.elements[0]]);
 }
 
-bool isDirectLeftRecursive (const Group g) {
-	bool isDirectLeftRecursive_(const NamedElement ne, const Group p) pure {
+
+bool isDirectLeftRecursive (const Group g) pure {
+	static immutable func = assumePure(&isDirectLeftRecursive__);
+	return func(g);
+}
+bool isDirectLeftRecursive__ (const Group g) {
+	static bool isDirectLeftRecursive_(const NamedElement ne, const Group p) {
 		return (ne.type == p.name || (p.parent && isDirectLeftRecursive_(ne, p.parent)));
 	}
 
@@ -53,7 +59,7 @@ bool isDirectLeftRecursive (const Group g) {
 	}
 
 	auto ne = (cast(NamedElement)g.elements[0]);
-	return (ne !is null && (ne.type == g.name) || isDirectLeftRecursive_(ne, g.parent));
+	return (ne !is null && isDirectLeftRecursive_(ne, g));
 }
 
 
@@ -213,14 +219,17 @@ auto orderByLength(const (Group)[] groups) {
 }
 
 auto orderByPrefix(const (Group)[] groups) {
-	bool[const PatternElement] seenFirsts;
-	PatternElement[][PatternElement] knownPrefixs;
+	uint[const PatternElement] seenFirsts;
+	const(PatternElement)[][const PatternElement] knownPrefixs;
 
 	foreach(group;groups) {
-		if (group.elements[0] in seenFirsts) {
-
+		if (auto n = group.elements[0] in seenFirsts) {
+			++(*n);
+			foreach(elm;group.elements) {
+				knownPrefixs[group.elements[0]] ~= elm;
+			}
 		} else {
-			seenFirsts[group.elements[0]] = true;
+			++seenFirsts[group.elements[0]];
 		}
 	}
 
@@ -385,5 +394,5 @@ bool isASTMember(const PatternElement element) {
 	bool re = (cast(RangeElement)element) !is null; 
 	//bool ce = element.containingElements.any!isASTMember;
 
-	return (ne || fe || re /*|| nc || ce*/);
+	return (ne || fe || re || nc /*|| ce*/);
 }
