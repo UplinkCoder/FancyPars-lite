@@ -23,43 +23,86 @@ private auto disambiguationElements_(const (Group)[] canidateGroups, const Group
 auto disambiguationElements(const Group grp, const (Group)[] allGroups) {
 	PatternElement[][] daes;
 	auto grs = allGroups;
+	auto p = cast (Group) getDirectLeftRecursiveParent(allGroups.getGroupNamed(grp.name.identifier));
+	
 	debug {
 		import std.stdio;
-		writeln(grp.name.identifier);
+		writeln(grp.name.identifier ,(p ? ":" ~ p.name.identifier : ""));
 	}
-	foreach(i;0 .. grp.elements.length) {
+	
+	foreach(i;(p?1:0) .. grp.elements.length) {
 		if (grs.length>1) {
 			grs = disambiguationElements_(grs, grp, i).array;
 		} else {
 			if (cast(OptionalElement)grp.elements[i-1]) {
 				i++;
+			} else if (auto ne = cast(NamedElement)grp.elements[i-1]) {
+				//allGroups.getGroupNamed(ne.name.identifier)
 			}
 			return splitOptionals(grp.elements[0 .. i]);
 		}
 	}
 	debug {
 		import std.stdio;
-		writeln (grp.name.identifier ~ to!string(grp.elements.length) ~ (cast(Group[])grs).to!string);
+		writeln (grp.name.identifier ~ to!string(grp.elements.length) ~ grs.length.to!string);
 	}
-	return splitOptionals([grp.elements[0]]);
-}
+	// if we get here the foreach-loop did not fire ... (we had an element count of one)
+	// HACK
+	
+	if (auto ne = cast(NamedElement)grp.elements[0]) {
+		if (ne.isArray) {
+			if (ne.lst_sep) {
+				return splitOptionals([ne.lst_sep]);
+			} else {
+				assert(0, "There cannot be an left recursive Group with an unended Array... I suppose ...");
+			}
+		}
+	}
+	
+		return splitOptionals([grp.elements[0]]);
+	}
 
-
-bool isDirectLeftRecursive (const Group g) pure {
-	static immutable func = assumePure(&isDirectLeftRecursive__);
+const (Group[]) getDirectLeftRecursiveChildren (const Group g) pure {
+	static immutable func = assumePure(&getDirectLeftRecursiveChildren__);
 	return func(g);
 }
-bool isDirectLeftRecursive__ (const Group g) {
-	static bool isDirectLeftRecursive_(const NamedElement ne, const Group p) {
-		return (ne.type == p.name || (p.parent && isDirectLeftRecursive_(ne, p.parent)));
+
+const (Group[]) getDirectLeftRecursiveChildren__ (const Group g) {
+	const(Group)[] result;
+	foreach(group;g.getAllGroups) {
+		if (getDirectLeftRecursiveParent(group) == g) {
+			result ~= group;
+		}
+	}
+	
+	return cast(const(Group[])) (result.length ? result : null);
+}
+const (Group) getDirectLeftRecursiveParent (const Group g) pure {
+	static immutable func = assumePure(&getDirectLeftRecursiveParent__);
+	return func(g);
+}
+
+const (Group) getDirectLeftRecursiveParent__ (const Group g) {
+	static const (Group) getDirectLeftRecursiveParent_(const NamedElement ne, const Group p) {
+		if (ne.type == p.name) {
+			return p;
+		} else if (p.parent) {
+			 return getDirectLeftRecursiveParent_(ne, p.parent);
+		} else {
+			return null;
+		}
 	}
 
 	if (!g.elements) {
-		return false;
+		return null;
 	}
 
 	auto ne = (cast(NamedElement)g.elements[0]);
-	return (ne !is null && isDirectLeftRecursive_(ne, g));
+	if (ne !is null) {
+		return getDirectLeftRecursiveParent_(ne, g);
+	} else {
+		return null;
+	}
 }
 
 
@@ -179,7 +222,7 @@ const (Group) getGroupNamed(GR)(GR groupRange, const string name) if (is(Unqual!
 	auto group = (canidates.empty ? null : canidates.front);
 
 	debug {
-		canidates.popFront;
+		if (group !is null) canidates.popFront;
 		assert(canidates.empty, "Multipile groups are named : " ~ name);
 	}
 
@@ -209,6 +252,7 @@ string[] getStrings(const (Group[]) allGroups) {
 	}
 	return sort(strings).array;
 }
+
 auto orderByLength(const (Group)[] groups) {
 	auto part = (cast(Group[])groups).partition!(g => g.hasGroups);
 	auto sortGroups = part.array;
@@ -219,6 +263,7 @@ auto orderByLength(const (Group)[] groups) {
 }
 
 auto orderByPrefix(const (Group)[] groups) {
+	const uint[const PatternElement] rank; 
 	uint[const PatternElement] seenFirsts;
 	const(PatternElement)[][const PatternElement] knownPrefixs;
 
@@ -320,8 +365,8 @@ bool isSame (const PatternElement e1, const PatternElement e2) {
 
 
 auto ASTMembers(ER)(ER elementRange) if (is(Unqual!(ElementType!ER) : PatternElement)) {
-	return elementRange
-		.filter!(e => e.isASTMember || [e].getAllElements.any!isASTMember);
+	return elementRange.getAllElements
+		.filter!(e => e.isASTMember);
 }
 
 auto LexerGroup (const Group grp) {

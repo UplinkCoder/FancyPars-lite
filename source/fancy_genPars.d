@@ -2,8 +2,9 @@ module fancy_genPars;
 import fancy_ast;
 import fancy_grammar;
 import fancy_util;
-import std.algorithm:filter,any;
+import std.algorithm:filter,any,canFind;
 import std.conv;
+import std.string;
 
 pure :
 
@@ -20,9 +21,13 @@ extern string genPars(const (Group[]) allGroups) pure {
 }
 
 struct ParserGenerator {
+	
 pure :
 	const (Group)[] allGroups;
 	string[] strings;
+	Group currentDirectLeftRecursiveParent;
+	Group currentGroup;
+	bool leftRecursiveElement;
 	
 	this (const (Group)[] allGroups) {
 		this.allGroups = allGroups;
@@ -69,31 +74,37 @@ pure :
 			result[$-6 .. $] = ";\n" ~ "}\n".indentBy(2);
 			
 			foreach(cG; ocGS.filter!(g => !g.hasGroups)) {
+				
+			
 				result ~= "\n" ~ "bool is".indentBy(2) 
 					~  cG.name.identifier ~	"() {\n" 
 					~ "return ".indentBy(3);
 				auto disambiguationElements_ = assumePure(&disambiguationElements);
 				
 				auto daea = disambiguationElements_(cG, allGroups);
-				debug {
-					import std.traits;
-					import std.stdio;
-					foreach(i,e;daea) {
-					//	writeln(i,e.map!(a => cast(Unqual!(typeof(a)))a));
-					}
-				}
+
 				foreach(dEs;daea) {
 					result ~= "peekMatch([";
 					foreach(dE;dEs) {
 					//	debug {import std.stdio; writeln(cG.name.identifier, " dE: ",cast(PatternElement)dE);}
 						if (auto ne = cast(NamedElement)dE) {
-							result ~= "TokenType.TT_" ~ getType(dE, false) ~ ", ";
+							assert(allGroups.getGroupNamed(ne.name.identifier)
+								is null
+							|| allGroups.getGroupNamed(ne.name.identifier)
+								.getDirectLeftRecursiveParent is null,
+								"DirectLeftRecursion elemination failed!");
+							
+							result ~= "TokenType.TT_" ~ ne.type.identifier ~ ", ";
 						} else if (auto se = cast(StringElement)dE) {
 							result ~= getTokenType(se) ~ ", ";
+						} else if (auto re = cast(RangeElement) dE) {
+							result ~= getTokenType(re) ~ ", ";
 						} else {
-							result ~= /*to!string(typeid(dE)) ~*/ ", ";
+							result ~= /*to!string(typeid(dE)) ~ */", ";
 						}
 					}
+				
+					
 					result = result[0 .. $-2] ~ "])\n" ~ "|| ".indentBy(3);
 				}
 
@@ -131,46 +142,99 @@ pure :
 	}
 
 	string genParse(const Group group, uint iLvl = 1) {
+		auto dlrcs = getDirectLeftRecursiveChildren(group);
+		
+		bool hasRecursiveChildren = dlrcs !is null;
+		
 		if (group.elements.any!(e => cast (NamedChar)e)) {
 			return "";
 		}
+		
 		char[] result;
-		if (isDirectLeftRecursive(group)) {
-			result = group.name.identifier.indentBy(iLvl)
-			~ " parse" ~ group.name.identifier
-	    ~ "(bool inRecursion) {\n";
+		
+		char[] genNameEnum() {
+			char[] result = cast(char[])"enum " ~ group.name.identifier
+				~ "RCEnum {\n";
+			foreach(dlrG;dlrcs) {
+				result ~= "__".indentBy(iLvl+1) ~ dlrG.name.identifier ~ ",\n";
+			}
+			result = result[0 .. $-2] ~ "\n" ~ "}\n".indentBy(iLvl);
+			return result;
+		}
+		
+		if (hasRecursiveChildren) {
+			result ~= (genNameEnum()
+				.indentBy(iLvl) ~ "\n\n");
+		}
+		
+		result ~= group.name.identifier.indentBy(iLvl)
+			~ " parse" ~ group.name.identifier;
+			
+		if (auto p = cast(Group) getDirectLeftRecursiveParent(group)) {
+			currentDirectLeftRecursiveParent = p;
+			currentGroup = cast (Group) group;
+			result ~= "(" ~ p.name.identifier ~" prev) {\n";
+		} else if (hasRecursiveChildren) {
+			result ~= "(" ~ group.name.identifier ~ "RCEnum __rc) {\n";  
 		} else {
-			result = group.name.identifier.indentBy(iLvl)
-			~ " parse" ~ group.name.identifier
-	    ~ "() {\n";
+			result ~= "() {\n";
 		}
 		iLvl++;
 	  
-	  //TODO LeftRecursionSpecialHandling
-	  
 	  if (group.groups) {
-	    result ~= "".indentBy(iLvl);
-	    
-	    foreach(cG;group.groups.filterOutInternal) {
+
+		result ~= group.name.identifier.indentBy(iLvl) 
+			  ~ " " ~ group.name.identifier[0..1].toLower ~ ";\n";
+		
+		result ~= "".indentBy(iLvl);
+		
+		foreach(cG;group.groups.filterOutInternal) {
+		bool isDLR;
+			if (dlrcs) {
+				foreach(dlrG;dlrcs) {
+					if (cG.name.identifier == dlrG.name.identifier) {
+						isDLR = true;
+						break;
+					}
+				}
+			}
+			if (isDLR) {
+				// skip direct left recursive childern they come later
+			} else {
 	      result ~= "if (is"
 	        ~ cG.name.identifier ~ "()) {\n"
-	        ~ "return parse".indentBy(iLvl+1)
+	        ~ group.name.identifier[0..1].toLower.indentBy(iLvl+1) 
+			~ " = parse"
 	        ~ cG.name.identifier
 	        ~ "();\n" ~ "} else ".indentBy(iLvl);
-	    }
-	    
-	    result = result[0 .. $-5] ~ "\n";
-		} else {
-	    foreach (element;group.elements.getAllElements) {
-			if (element.isASTMember) {
-	        	result ~= genDecl(element).indentBy(iLvl);
 			}
 	    }
+	    result = result[0 .. $-5] ~ "\n\n" ~ "".indentBy(iLvl);
+		
+		foreach(cG;dlrcs) {
+			result ~= "if (is"
+	        ~ cG.name.identifier ~ "() && __rc != " 
+			~ group.name.identifier ~ "RCEnum.__" 
+			~ cG.name.identifier ~ ") {\n"
+	        ~ group.name.identifier[0..1].toLower.indentBy(iLvl+1) 
+			~ " = parse"
+	        ~ cG.name.identifier
+	        ~ "(" ~ group.name.identifier[0..1].toLower
+			~ ");\n" ~ "} else ".indentBy(iLvl);
+		}
+		result = result[0 .. $-5] ~ "\n\n";
+		
+		result ~= "return ".indentBy(iLvl) 
+		  ~ group.name.identifier[0..1].toLower ~ ";\n";
+	} else {
+	    foreach (element;group.elements.ASTMembers) {
+	        result ~= genDecl(element).indentBy(iLvl);
+	    }
 	    result ~= "\n";
+		leftRecursiveElement = getDirectLeftRecursiveParent(group) !is null;
 	    foreach(element;group.elements) {
 	      result ~= genParse(element, iLvl);
 	    }
-
 	    result ~= "\n" ~ genReturn(group);
 	  }
 	  
@@ -184,11 +248,17 @@ pure :
 
 		if (auto ne = cast(NamedElement)element) {
 			if (ne.isArray) {
-				
 				if (ne.lst_sep) {
 					result ~= "\n" ~ ne.getName.indentBy(iLvl)
-						~ " ~= parse" ~ ne.getType(false)
-						~ "();\n";
+						~ " ~= parse" ~ ne.type.identifier ~ "(";
+						
+					if (leftRecursiveElement) {
+						result ~=  
+							currentDirectLeftRecursiveParent.name.identifier
+							~ "RCEnum.__" ~ currentGroup.name.identifier; 	
+					}
+					
+					result ~= ");\n"; 
 
 					result ~= "while(".indentBy(iLvl++) 
 						~ condOf(ne.lst_sep) ~ ") {\n";
@@ -197,13 +267,21 @@ pure :
 						~ condOf(ne) ~ ") {\n";
 				}
 				
-				result ~= ne.getName.indentBy(iLvl+1)
-					~ " ~= parse" ~ ne.getType(false)
-						~ "();\n" ~ "}\n".indentBy(--iLvl);
-			} else {
-				result ~= ne.getName.indentBy(iLvl) 
-					~ " = parse" ~ ne.getType(false) 
-						~ "();\n";
+				
+			}
+			
+			result ~= ne.getName.indentBy(iLvl + ne.isArray)
+				~ " ~= parse" ~ ne.type.identifier ~ "(";
+			if (leftRecursiveElement) {
+				result ~=  
+				currentDirectLeftRecursiveParent.name.identifier
+				~ "RCEnum.__" ~ currentGroup.name.identifier;
+			}
+			
+			result ~= ");\n";
+			
+			if (ne.isArray) {
+				result ~= "}\n".indentBy(--iLvl);
 			}
 		} else if (auto re = cast(RangeElement)element) {
 			result ~= re.name.identifier.indentBy(iLvl)
@@ -250,6 +328,9 @@ pure :
 		} else {
 			//assert(0, typeid(element).to!string ~ " is not handled");
 		}
+		
+		leftRecursiveElement = false;
+		
 		return cast(string) result;
 	}
 
@@ -259,11 +340,11 @@ pure :
 		result ~= "return new ".indentBy(2) 
 			~ group.name.identifier ~ "(";
 	  
-	    foreach(element;group.elements.getAllElements.filter!(e => e.isASTMember)) {
+	    foreach(element;group.elements.ASTMembers) {
 	        result ~= getName(element) ~ ", ";
 	    }
 
-		if (!group.elements.getAllElements.filter!(e => e.isASTMember).empty) {
+		if (!group.elements.ASTMembers.empty) {
 	    	result = result[0..$-2];
 		}
 	  
