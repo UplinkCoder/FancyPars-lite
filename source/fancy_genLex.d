@@ -1,6 +1,5 @@
 ﻿module fancy_genLex;
 import std.array;
-import std.conv;
 import std.algorithm:filter,any,map,reduce,all,sort,min,commonPrefix;
 import std.typecons:Tuple;
 import std.traits:Unqual;
@@ -9,6 +8,8 @@ import fancy_ast;
 import fancy_grammar;
 
 string genFixedToken(string[] strings) pure {
+	import std.conv:to;
+
 	string result;
 	const (char)[] next;
 	char[] currentPrefix;
@@ -86,7 +87,11 @@ string genFixedToken(string[] strings) pure {
 }
 
 string genTokenSize(string[] strings) {
-	string result = cast(string) "uint TokenSize(TokenType t) {\n".indentBy(1);
+	import std.conv:to;
+
+	string result = cast(string) ("uint TokenSize(TokenType t) {\n" ~
+		"switch(t) {\n".indentBy(1));
+
 	uint currentMaxVal;
 	uint maxKey;
 	uint[uint] counts;
@@ -99,13 +104,23 @@ string genTokenSize(string[] strings) {
 		}
 	}
 	foreach(key,value;counts) {
-		if (value < currentMaxVal) {
+		debug{import std.stdio; writeln("key: ",key," value: ",value," maxKey: ",maxKey," maxVaue: ", currentMaxVal,"\n");}
+		if (value > currentMaxVal) {
 			currentMaxVal = value;
 			maxKey = key;
 		}
 	}
 
+	uint i;
+	foreach(s;strings.filter!((s) {i++;return s.length != maxKey;})) {
+		result  ~= "case TokenType.TT_".indentBy(2) 
+			~ to!string(i) 
+			~ " : return " ~ s.length.to!string ~ ";\n"; 
+	}
 
+	result ~= "default : return ".indentBy(2)
+		~ maxKey.to!string ~ ";\n"
+		~ "}\n".indentBy(1) ~ "}\n";
 
 
 	return result;
@@ -128,7 +143,7 @@ string genTokenTypeEnum(const Group[] allGroups) {
 		result ~= "\n\t" ~ "TT_" ~ to!string(i+1) ~ ", // " ~ str;
 	}
 
-	return result ~ "\n}\n";
+	return result ~ "\n}\n" ~ genTokenSize(strings);
 }
 
 string genLex(const (Group)[] allGroups) {
@@ -136,7 +151,7 @@ string genLex(const (Group)[] allGroups) {
 
 	foreach(rangeG;allGroups.filter!(g => RangeGroup(g))) {
 
-		result ~= "\n\tbool is" ~ rangeG.name.identifier ~ "(char c) {\n" ~ 
+		result ~= "\n\tbool is" ~ rangeG.name.identifier ~ "(char c) pure {\n" ~ 
 			"return (".indentBy(2);
 		foreach(CharRange range;(cast(RangeElement)rangeG.elements[0]).ranges) {
 			if (range.rangeEnd) {
@@ -147,12 +162,17 @@ string genLex(const (Group)[] allGroups) {
 		}
 
 		result = result[0 .. $-4] ~ ");\n\t}\n";
+
+		result ~= "\n\tvoid lex" ~ rangeG.name.identifier ~ "() {\n\t\tchar[] __a;\n\t\tchar __c;"
+			~ "\n\n\t\twhile(is" ~ rangeG.name.identifier ~ "(__c = peek(__a.length))) {"
+			~ "\n\t\t\t__a ~= __c;\n\t\t}\n\n\t\tputToken(TokenType.TT_" ~ rangeG.name.identifier
+			~ ", __a, cast(uint) __a.length);\n\n\t\treturn;\t\n}\n";
+
 	}
 
-	//	foreach(delimG;allGroups.filter!(g => DelimitedCharGroup(g))) {
-//		import std.stdio;
-//		writeln(delimG.name.identifier);
-//	}
+//		foreach(delimG;allGroups.filter!(g => DelimitedCharGroup(g))) {
+//			result ~= "\n\t is" ~ rangeG.name.identifier ~ "(char c) {\n" ~
+//		}
 
 	
 	result ~= genFixedToken(sort(getStrings(allGroups)).release);

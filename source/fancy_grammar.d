@@ -109,7 +109,7 @@ const (Group) getDirectLeftRecursiveParent__ (const Group g) {
 auto getDirectLeftRecursiveGroups (GR)(GR groupRange) if (is(Unqual!(ElementType!GR) : Group)) {
 	auto lrgs = groupRange
 		.filter!(g => !g.hasGroups)
-		.filter!(g => isDirectLeftRecursive(g));
+		.filter!(g => getDirectLeftRecursiveParent(g));
 	
 	return lrgs;
 }

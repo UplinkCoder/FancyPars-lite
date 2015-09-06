@@ -2,7 +2,7 @@ module fancy_genPars;
 import fancy_ast;
 import fancy_grammar;
 import fancy_util;
-import std.algorithm:filter,any,canFind;
+import std.algorithm:filter,any;
 import std.conv;
 import std.string;
 
@@ -164,7 +164,7 @@ pure :
 		
 		if (hasRecursiveChildren) {
 			result ~= (genNameEnum()
-				.indentBy(iLvl) ~ "\n\n");
+				.indentBy(iLvl) ~ "\n");
 		}
 		
 		result ~= group.name.identifier.indentBy(iLvl)
@@ -271,7 +271,7 @@ pure :
 			}
 			
 			result ~= ne.getName.indentBy(iLvl + ne.isArray)
-				~ " ~= parse" ~ ne.type.identifier ~ "(";
+				~ (ne.isArray ? " ~=" :" =") ~ " parse" ~ ne.type.identifier ~ "(";
 			if (leftRecursiveElement) {
 				result ~=  
 				currentDirectLeftRecursiveParent.name.identifier
