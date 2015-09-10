@@ -80,14 +80,14 @@ struct ParserGenerator {
 	
 pure :
 	const (Group)[] allGroups;
-	string[] strings;
+	SortedRange!(string[], "a < b") sortedStrings;
 	Group currentDirectLeftRecursiveParent;
 	Group currentGroup;
 	bool leftRecursiveElement;
 	
 	this (const (Group)[] allGroups) {
 		this.allGroups = allGroups;
-		this.strings = allGroups.getStrings;
+		this.sortedStrings = allGroups.getStrings;
 	//	this.LexerGroups = allGroups.filter!(g => LexerGroup(g));
 	}
 
@@ -96,9 +96,11 @@ pure :
 
 	string getTokenType(const PatternElement pe) {
 	 if (auto se = cast(StringElement) pe) {
-			foreach(i,str;strings) {
+			uint i;
+			foreach(str;sortedStrings) {
+				++i;
 				if (se.string_ == str) {
-					return "TokenType.TT_" ~ to!string(i+1);
+					return "TokenType.TT_" ~ to!string(i);
 				}
 			}
 			assert(0, "Trying to match unknown StringElement " ~ se.string_);

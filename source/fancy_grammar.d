@@ -4,7 +4,7 @@ import fancy_ast;
 import std.conv;
 import std.traits;
 import std.range;
-import std.algorithm:filter,map,partition,sort,commonPrefix,multiSort,countUntil,any,all;
+import std.algorithm:filter,map,partition,sort,SortedRange,commonPrefix,multiSort,countUntil,any,all;
 import std.array;
 
 
@@ -54,7 +54,8 @@ auto disambiguationElements(const Group grp, const (Group)[] allGroups) {
 			if (ne.lst_sep) {
 				return splitOptionals([ne.lst_sep]);
 			} else {
-				assert(0, "There cannot be an left recursive Group with an unended Array... I suppose ...");
+				return splitOptionals([grp.elements[0]]);
+				//assert(0, "There cannot be an left recursive Group with an unended Array... I suppose ...");
 			}
 		}
 	}
@@ -66,7 +67,7 @@ const (Group[]) getDirectLeftRecursiveChildren (const Group g) pure {
 	static immutable func = assumePure(&getDirectLeftRecursiveChildren__);
 	return func(g);
 }
-
+//TODO traverse Tree Top Down instead of doing all work multiple times
 const (Group[]) getDirectLeftRecursiveChildren__ (const Group g) {
 	const(Group)[] result;
 	foreach(group;g.getAllGroups) {
@@ -131,7 +132,10 @@ const(PatternElement[][]) splitOptionals(const PatternElement[] elms) {
 			foreach(opt;oe.ce) {
 				tmp ~= cast(PatternElement) opt;
 			}
-
+			if (cast(LexerElement) oe.elem || ((cast(NamedElement)oe.elem !is null) &&
+					(cast(NamedElement)oe.elem).type.identifier)) {
+				tmp ~= oe.elem;
+			}
 			options ~= tmp;
 		} else {
 			untouched ~= cast(PatternElement) elm;
@@ -228,7 +232,7 @@ const (Group) getGroupNamed(GR)(GR groupRange, const string name) if (is(Unqual!
 
 	return group;
 }
-string[] getStrings(const (Group[]) allGroups) { 
+SortedRange!(string[], "a < b") getStrings(const (Group[]) allGroups) { 
 	string[] strings;
 
 	foreach(elements;allGroups
@@ -250,7 +254,7 @@ string[] getStrings(const (Group[]) allGroups) {
 			}
 		}
 	}
-	return sort(strings).array;
+	return sort(strings);
 }
 
 auto orderByLength(const (Group)[] groups) {
@@ -374,23 +378,48 @@ auto LexerGroup (const Group grp) {
 }
 
 auto RangeGroup(const Group grp) {
-	return (
-		grp.elements.length == 1
-			&& cast(RangeElement)grp.elements[0] !is null
-		)
-		? grp :
-		null;
+	struct RangeGroup_ {
+		Identifier name;
+		RangeElement re;
+	}
+	if (grp.elements.length == 1) {
+		RangeGroup_* rg = new RangeGroup_();
+		rg.re = cast(RangeElement)grp.elements[0];
+		if (rg.re !is null) {
+			rg.name = cast (Identifier)grp.name;
+			return rg;
+		}
+		rg.destroy;
+	}
+
+	return null;
 }
 
 auto DelimitedCharGroup(const Group grp) {
-	return (
-		grp.elements.length == 3
-			&& cast(StringElement)grp.elements[0] !is null
-			&& cast(NamedChar)grp.elements[1] !is null
-			&& cast(StringElement)grp.elements[2] !is null
-		)
-		? grp :
-		null;
+	struct DelimitedCharGroup_ {
+		Identifier name;
+		StringElement begin;
+		NamedChar content;
+		StringElement end;
+	}
+
+	if (grp.elements.length == 3) {
+		DelimitedCharGroup_* dcg = new DelimitedCharGroup_();
+		dcg.begin = cast(StringElement)grp.elements[0];
+		dcg.content = cast(NamedChar)grp.elements[1];
+		dcg.end = cast(StringElement)grp.elements[2];
+
+		if (dcg.begin !is null
+			&& dcg.content !is null
+			&& dcg.end !is null
+			) {
+			dcg.name = cast(Identifier) grp.name;
+			return dcg;
+		}
+		dcg.destroy;
+	}
+
+	return null;
 }
 
 auto containingElements(const PatternElement elem) {
