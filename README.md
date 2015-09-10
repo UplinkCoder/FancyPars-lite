@@ -2,7 +2,7 @@
 
 currently unfinished but hopefully useful to someone.
 -
-it only compiles with dmd 2.0.66.2 because it exploits a bug in the const-ness type-system
+it only compiles with dmd 2.066.1 because it exploits a bug in the const-ness type-system
 to do technically illegal things in CTFE
 -
 

@@ -8,15 +8,71 @@ import std.string;
 
 pure :
 
+static immutable string parser_blrplate_head = ` parse(in Token[] tokens) pure { 
+	struct Parser {
+	pure :
+		const(Token[]) tokens;
+		uint pos;
+		Token lastMatched;
+		
+		const(Token) peekToken(int offset) {
+			assert(pos + offset <= tokens.length && pos + offset >= 0);
+			return tokens[pos + offset];
+		}
+		
+		
+		bool peekMatch(TokenType[] arr) {
+			foreach (uint i,e;arr) {
+				if(peekToken(i).type != e) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		bool opt_match(TokenType t) {
+			lastMatched = cast(Token) peekToken(0);
+			
+			if (lastMatched.type == t) {
+				pos++;
+				return true;
+			} else {
+				lastMatched = Token.init;
+				return false;
+			}
+		}
+		
+		Token match(bool _try = false)(TokenType t) {
+			import std.conv;
+			import std.exception:enforce;
+			static if (!_try) {
+				enforce(opt_match(t), "Expected : " ~ to!string(t) ~ " Got : " ~ to!string(peekToken(0)) );
+				return lastMatched;
+			} else {
+				return ((opt_match(t) ? lastMatched : TokenType.TT_0));
+			}
+		}
+
+`;
 extern string genPars(const (Group[]) allGroups) pure {
 	char[] result;
+	string parent_name = null;
 	auto pg = ParserGenerator(allGroups);
 	
 	foreach(group;allGroups) {
+		if (group.hasAnnotation("parent")) {
+			parent_name = group.name.identifier;
+		}
+
 		result ~= pg.genParse(group);
 	}
 
-	return pg.genIsMethods() ~"\n"~ result;
+	if (!parent_name) {
+		parent_name = allGroups[0].name.identifier;
+	}
+
+	return parent_name ~ parser_blrplate_head ~ pg.genIsMethods() ~"\n"~ result 
+		~ "\n\t}\n\n\treturn Parser(tokens).parse" ~ parent_name ~ ";\n}";
 
 }
 
@@ -24,14 +80,14 @@ struct ParserGenerator {
 	
 pure :
 	const (Group)[] allGroups;
-	string[] strings;
+	SortedRange!(string[], "a < b") sortedStrings;
 	Group currentDirectLeftRecursiveParent;
 	Group currentGroup;
 	bool leftRecursiveElement;
 	
 	this (const (Group)[] allGroups) {
 		this.allGroups = allGroups;
-		this.strings = allGroups.getStrings;
+		this.sortedStrings = allGroups.getStrings;
 	//	this.LexerGroups = allGroups.filter!(g => LexerGroup(g));
 	}
 
@@ -40,9 +96,11 @@ pure :
 
 	string getTokenType(const PatternElement pe) {
 	 if (auto se = cast(StringElement) pe) {
-			foreach(i,str;strings) {
+			uint i;
+			foreach(str;sortedStrings) {
+				++i;
 				if (se.string_ == str) {
-					return "TokenType.TT_" ~ to!string(i+1);
+					return "TokenType.TT_" ~ to!string(i);
 				}
 			}
 			assert(0, "Trying to match unknown StringElement " ~ se.string_);
@@ -119,9 +177,8 @@ pure :
 
 	char[] condOf(const PatternElement elem) {
 		char[] result;
-		if (elem is null) {
-			return cast(char[])"";
-		}
+		assert(elem, "cannot pass null into condOf");
+
 		if (elem.isASTMember) {
 				return cast (char[]) 
 					("is" ~ elem.getType(false) ~ "()");
