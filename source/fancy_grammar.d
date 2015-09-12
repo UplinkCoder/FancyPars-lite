@@ -8,7 +8,7 @@ import std.algorithm:filter,map,partition,sort,SortedRange,commonPrefix,multiSor
 import std.array;
 
 
-private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const uint i) pure {
+private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const size_t i) pure {
 	//assert(group.elements.length>i);
 	auto filterd = canidateGroups
 		.filter!(g => g.elements !is null)
