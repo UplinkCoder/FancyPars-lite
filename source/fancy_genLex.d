@@ -88,10 +88,10 @@ string genTokenSize(SortedRange!(string[], "a < b") strings) {
 	uint[uint] counts;
 
 	foreach(s;strings) {
-		if (s.length in counts) {
-			counts[s.length]++;
+		if (cast(uint)s.length in counts) {
+			counts[cast(uint)s.length]++;
 		} else {
-			counts[s.length] = 1;
+			counts[cast(uint)s.length] = 1;
 		}
 	}
 	foreach(key,value;counts) {

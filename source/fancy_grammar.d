@@ -32,7 +32,7 @@ auto disambiguationElements(const Group grp, const (Group)[] allGroups) {
 	
 	foreach(i;(p?1:0) .. grp.elements.length) {
 		if (grs.length>1) {
-			grs = disambiguationElements_(grs, grp, i).array;
+			grs = disambiguationElements_(grs, grp, cast(uint)i).array;
 		} else {
 			if (cast(OptionalElement)grp.elements[i-1]) {
 				i++;
