@@ -8,7 +8,7 @@ import std.algorithm:filter,map,partition,sort,SortedRange,commonPrefix,multiSor
 import std.array;
 
 
-private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const size_t i) pure {
+private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const uint i) pure {
 	//assert(group.elements.length>i);
 	auto filterd = canidateGroups
 		.filter!(g => g.elements !is null)
@@ -32,7 +32,7 @@ auto disambiguationElements(const Group grp, const (Group)[] allGroups) {
 	
 	foreach(i;(p?1:0) .. grp.elements.length) {
 		if (grs.length>1) {
-			grs = disambiguationElements_(grs, grp, i).array;
+			grs = disambiguationElements_(grs, grp, cast(uint)i).array;
 		} else {
 			if (cast(OptionalElement)grp.elements[i-1]) {
 				i++;

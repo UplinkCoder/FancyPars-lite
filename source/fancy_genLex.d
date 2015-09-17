@@ -84,14 +84,14 @@ string genTokenSize(SortedRange!(string[], "a < b") strings) {
 		"switch(t) {\n".indentBy(1));
 
 	uint currentMaxVal;
-	size_t maxKey;
-	uint[size_t] counts;
+	uint maxKey;
+	uint[uint] counts;
 
 	foreach(s;strings) {
-		if (s.length in counts) {
-			counts[s.length]++;
+		if (cast(uint)s.length in counts) {
+			counts[cast(uint)s.length]++;
 		} else {
-			counts[s.length] = 1;
+			counts[cast(uint)s.length] = 1;
 		}
 	}
 	foreach(key,value;counts) {
