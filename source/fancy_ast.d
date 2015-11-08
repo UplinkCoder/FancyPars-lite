@@ -30,7 +30,7 @@ class Number : ASTNode {
 	}
 }
 class Group : ASTNode {
-	Group parent;
+	//Group parent;
 	Identifier name;
 	Identifier[] annotations;
 
@@ -38,7 +38,7 @@ class Group : ASTNode {
 	Group[] groups;
 
 	this(/*Group parent,*/ Identifier name, Identifier[] annotations, PatternElement[] elements, Group[] groups) pure {
-		this.parent = null;
+//		this.parent = null;
 		this.name = name;
 		this.annotations = annotations;
 		this.elements = elements;
@@ -62,7 +62,7 @@ class Group : ASTNode {
 }
 abstract class PatternElement : ASTNode {
 	ASTNode parent;
-	override bool opEquals(Object o) {
+	override bool opEquals(Object o) pure {
 		auto pe = (cast(PatternElement)o);
 		return (pe ? opEquals(pe) : false);
 	}
@@ -109,7 +109,38 @@ class AlternativeElement : PatternElement {
 		this.alternatives = alternatives;
 	}
 }
-abstract class LexerElement : PatternElement {}
+
+class AnonymousGroupElement : PatternElement {
+	PatternElement[] elements;
+
+	this (PatternElement[] elements) pure {
+		this.elements = elements;
+	}
+
+	alias opEquals = PatternElement.opEquals;
+	
+	override bool opEquals(Object o) pure {
+		auto age = (cast(AnonymousGroupElement)o);
+		return (age ? opEquals(age) : false);
+	}
+
+	bool opEquals(AnonymousGroupElement rhs) pure {		
+		return this.elements == rhs.elements;
+	}
+}
+
+abstract class LexerElement : PatternElement {
+	alias opEquals = PatternElement.opEquals;
+	
+	override bool opEquals(Object o) pure {
+		auto le = (cast(LexerElement)o);
+		return (le ? opEquals(le) : false);
+	}
+	
+	bool opEquals(LexerElement rhs) pure {		
+		return this is rhs;
+	}
+}
 
 class StringElement : LexerElement {
 	const char[] string_;
@@ -122,14 +153,14 @@ class StringElement : LexerElement {
 		this.string_ = string_;
 	}
 
-	alias opEquals = PatternElement.opEquals;
+	alias opEquals = LexerElement.opEquals;
 
-	override bool opEquals(Object o) {
+	override bool opEquals(Object o) pure {
 		auto se = (cast(StringElement)o);
 		return (se ? opEquals(se) : false);
 	}
 	
-	bool opEquals(StringElement rhs) {		
+	bool opEquals(StringElement rhs) pure {		
 		return this.string_ == rhs.string_;
 	}
 
@@ -209,13 +240,15 @@ class ParenElement : PatternElement {
 	}
 }
 class NamedElement : PatternElement {
+	import std.conv:to;
 	override string toString() pure {
-		return cast(string) (type.identifier 
+		return cast(string) (age ? "{" ~ to!string(age.elements) ~ "}": type.identifier 
 			~ (isArray ? "[] ": " ")
 				~ name.identifier);
 	}
 
 	Identifier type;
+	AnonymousGroupElement age;
 	bool isArray;
 	Identifier name;
 	StringElement lst_sep;
@@ -231,8 +264,9 @@ class NamedElement : PatternElement {
 			return rhs.type.identifier == this.type.identifier;
 	}
 
-	this(Identifier type, bool isArray, Identifier name, StringElement lst_sep) pure {
+	this(Identifier type,AnonymousGroupElement age, bool isArray, Identifier name, StringElement lst_sep) pure {
 		this.type = type;
+		this.age = age;
 		this.isArray = isArray;
 		this.name = name;
 		this.lst_sep = lst_sep;
@@ -259,23 +293,23 @@ class QueryElement : PatternElement {
 		this.elem = elem;
 	}
 }
-class OptionalElement : PatternElement {
+class ConditionalElement : PatternElement {
 
 	override string toString() pure {
 		return cast(string) ("? "  ~ ce[0].toString ~ " : " ~ elem.toString); 
 	}
 
-	override bool opEquals(Object o) {
-		auto oe = (cast(OptionalElement)o);
+	override bool opEquals(Object o) pure {
+		auto oe = (cast(ConditionalElement)o);
 		return (oe ? opEquals(oe) : false);
 	}
 	
-	bool opEquals(OptionalElement rhs) {		
+	bool opEquals(ConditionalElement rhs) pure {		
 		return this.ce == rhs.ce;
 	}
 
 	bool opEquals(LexerElement rhs) {		
-		return this.ce[0] == rhs;
+		return (this.ce[0]) == rhs;
 	}
 
 	LexerElement[] ce;

@@ -89,7 +89,7 @@ KlaNode {
 		[a-zA-Z][] identifier
 	}
 	
-	Operator @internal {
+	Operator @internal @enumify {
 		Add {"+"}
 		Sub {"-"}
 		Mul {"*"}

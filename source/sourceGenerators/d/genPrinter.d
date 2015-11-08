@@ -1,15 +1,15 @@
-﻿module fancy_genPrinter;
+﻿module sourceGenerators.d.genPrinter;
 import fancy_ast;
-import fancy_grammar;
+import fancy_analyzer;
 import fancy_util;
-import fancy_genVisitor;
+import sourceGenerators.d.genVisitor;
 
-string genPrinter (const(Group)[] allGroups) pure {
-	string blrplate=`//printer_boilerplate
-string print(const Group root) pure {
-	
+string genPrinter (const GrammerAnalyzer.AnalyzedGrammar ag) pure {
+	string blrplate=`
+string print(const `~ ag.allGroups[0].name.identifier ~` root) pure {
+	import std.array;
 	struct Printer {
-		Appender!(char[]) sink;
+		Appender!(const (char)[]) sink;
 
 		void print(const char c) {
 			sink.put([c]);
@@ -23,7 +23,7 @@ string print(const Group root) pure {
 
 		if (auto se = cast(StringElement)e) {
 			result ~= "sink.put(\"".indentBy(3) ~ se.string_ ~ "\");\n";
-		} else if (auto oe = cast(OptionalElement)e) {
+		} else if (auto oe = cast(ConditionalElement)e) {
 				if (oe.elem.isASTMember) {
 
 				result ~= "if (g.".indentBy(3) ~ getName(oe.elem) 
@@ -49,7 +49,7 @@ string print(const Group root) pure {
 				~	"print(_e".indentBy(4) 
 				~ ");\n";
 				if (ne.lst_sep) {
-					result ~= "print(\"".indentBy(4)
+					result ~= "sink.put(\"".indentBy(4)
 					~ ne.lst_sep.string_ ~ "\");\n";
 				}
 				result ~= "}".indentBy(3) ~ "\n";
@@ -76,22 +76,19 @@ string print(const Group root) pure {
 		return result;
 	}
 
-	foreach(eG;allGroups.getElementGroups) {
+	foreach(eG;ag.allGroups.getElementGroups) {
 		result ~= "\n\n" ~ "void print(".indentBy(2)
 			~ eG.name.identifier ~ " g) {\n";
 		foreach(elm;eG.elements) {
-			if (auto se = cast(StringElement)elm) {
-				result ~= "sink.put(\"".indentBy(3) ~ se.string_ ~ "\");\n";
-			} else {
-				result ~= genPtrStmt(elm);
-			}
+			result ~= genPtrStmt(elm);
 			result ~= "sink.put(\" \");\n".indentBy(3);
 		}
 		result ~= "}\n".indentBy(2);
 	}
 
-	return  blrplate ~ genVisitor(allGroups,"void","print",2) ~ result  ~ "\n\t}"
-		~ "\n\tauto ptr = Printer();\n\tptr.print(cast(Group)root);\n\treturn cast(string)ptr.sink.data;"
+	return  blrplate ~ genVisitor(ag.allGroups,"void","print",2) ~ result  ~ "\n\t}"
+		~ "\n\tauto ptr = Printer();\n\tptr.print(cast(" ~ ag.allGroups[0].name.identifier ~ 
+		")root);\n\treturn cast(string)ptr.sink.data;"
 			~ "\n}\n";
 
 }

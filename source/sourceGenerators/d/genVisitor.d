@@ -1,7 +1,7 @@
-module fancy_genVisitor;
+module sourceGenerators.d.genVisitor;
 
 import fancy_ast;
-import fancy_grammar;
+import fancy_analyzer;
 import fancy_util;
 
 string genVisitor(const (Group)[] allGroups, const char[] retType = "void", const char[] funcName = "visit", uint iLvl=0) pure {

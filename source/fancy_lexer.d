@@ -220,7 +220,7 @@ Token[] lex(in string source) pure {
 		} else if (isIdentifier(p)) {
 			lexIdentifier();
 		} else {
-			enforce(0, "Cannot advance lexer : ASCII Code [" ~ to!string(to!int(p)) ~ "]");
+			enforce(0, "Cannot advance lexer : ASCII Code [" ~ to!string(to!int(p)) ~ "] at line: " ~ to!string(line+1));
 		}
 	}
 

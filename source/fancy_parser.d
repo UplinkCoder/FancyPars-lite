@@ -38,13 +38,20 @@ Group parse(in Token[] tokens) pure {
 		Token match(TokenType t) {
 			import std.conv;
 			import std.exception:enforce;
-			
-			enforce(opt_match(t), "Expected : " ~ to!string(t) ~ " Got : " ~ to!string(peekToken(0)) );
-			
+
+			if (!__ctfe) {
+				enforce(opt_match(t), "Expected : " ~ to!string(t) ~ " Got : " ~ to!string(peekToken(0)) );
+			} else {
+				assert(opt_match(t),to!string(t));
+			}
 			return lastMatched;
 		}
 
-		
+
+		bool isIdentifier() {
+			return peekMatch([TokenType.TT_Identifier]);
+		}
+
 		bool isGroup() {
 			return peekMatch([TokenType.TT_Identifier, TokenType.TT_18])
 			|| peekMatch([TokenType.TT_Identifier, TokenType.TT_12]);
@@ -56,7 +63,12 @@ Group parse(in Token[] tokens) pure {
 
 		bool isNamedElement() {
 			return peekMatch([TokenType.TT_Identifier, TokenType.TT_Identifier])
-				|| peekMatch([TokenType.TT_Identifier, TokenType.TT_14]);
+				|| peekMatch([TokenType.TT_Identifier, TokenType.TT_14])
+				|| isAnonymousGroupElement();
+		}
+
+		bool isAnonymousGroupElement() {
+			return peekMatch([TokenType.TT_18]);
 		}
 
 		bool isNamedChar() {
@@ -215,8 +227,10 @@ Group parse(in Token[] tokens) pure {
 				p = parseFlagElement();
 			}  else if (isLexerElement()) {
 				p = parseLexerElement();
-			}  else 
-				assert(0, "No Matching PatternElement" );
+			//}  else if (isAnonymousGroupElement) {
+			//	p = parseAnonymousGroupElement;
+			} else
+				assert(0, "No Matching PatternElement" ~to!string (lastMatched.line) );
 
 			if (peekMatch([TokenType.TT_8]) && !inAlternative) {
 				return parseAlternativeElement(p);
@@ -244,10 +258,15 @@ Group parse(in Token[] tokens) pure {
 			Identifier type;
 			bool isArray;
 			Identifier name;
+			AnonymousGroupElement age;
 			StringElement lst_sep;
 
-			type = parseIdentifier();
-
+			if (isIdentifier()) {
+				type = parseIdentifier();
+			} else if (isAnonymousGroupElement()) {
+				age = parseAnonymousGroupElement();
+			}
+			debug {import std.stdio;if(!__ctfe && age !is null)writeln(age.elements);}
 			if (opt_match(TokenType.TT_14)) {
 				isArray = true;
 			}
@@ -262,10 +281,10 @@ Group parse(in Token[] tokens) pure {
 
 			}
 
-			return new NamedElement(type, isArray, name, lst_sep);
+			return new NamedElement(type, age, isArray, name, lst_sep);
 		}
 
-		OptionalElement parseOptionalElement() { 
+		ConditionalElement parseOptionalElement() { 
 			LexerElement[] ce;
 			PatternElement elem;
 
@@ -280,7 +299,7 @@ Group parse(in Token[] tokens) pure {
 				elem = parsePatternElement();
 			}
 
-			return new OptionalElement(ce, elem);
+			return new ConditionalElement(ce, elem);
 		}
 
 		ParenElement parseParenElement() { 
@@ -318,6 +337,20 @@ Group parse(in Token[] tokens) pure {
 			assert(alternatives.length>1);
 
 			return new AlternativeElement(alternatives);
+		}
+
+		AnonymousGroupElement parseAnonymousGroupElement() {
+			PatternElement[] elements;
+			
+			match(TokenType.TT_18);
+			
+			elements ~= parsePatternElement();
+			while(opt_match(TokenType.TT_6)) {
+				elements ~= parsePatternElement();
+			}
+			match(TokenType.TT_19);
+			
+			return new AnonymousGroupElement(elements);
 		}
 
 		LexerElement parseLexerElement() {

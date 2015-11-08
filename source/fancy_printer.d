@@ -152,7 +152,7 @@ string print(const Group root) pure {
 		}
 
 		
-		void print(OptionalElement g) {
+		void print(ConditionalElement g) {
 			sink.put("?");
 			sink.put(" ");
 			foreach(_e;g.ce) {
@@ -188,7 +188,7 @@ string print(const Group root) pure {
 				return print(g);
 			} else	if(auto g = cast(QueryElement)p) {
 				return print(g);
-			} else	if(auto g = cast(OptionalElement)p) {
+			} else	if(auto g = cast(ConditionalElement)p) {
 				return print(g);
 			}
 		}

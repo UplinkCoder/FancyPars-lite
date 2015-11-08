@@ -16,3 +16,7 @@ const(char)[] indentBy(const char[] str, const int indentLevel) pure {
 	}
 	return indent ~ str;
 }
+
+auto unQual(T)(T t) {
+	return cast(Unqual!T)t;
+}

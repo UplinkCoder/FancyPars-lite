@@ -8072,7 +8072,9 @@ AlternativeElement {
 			"?", ConstantElement[] ce, ":", PatternElement elem
 		}
 		
-	}		Identifier {
+	}	
+	
+	Identifier {
 		[a-zA-Z_-_][] identifer
 	}
 
@@ -8139,3 +8141,4 @@ AlternativeElement {
 		
 	}
 }`;
+
