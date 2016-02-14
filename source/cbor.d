@@ -20,7 +20,7 @@ module cbor;
 
 private import std.string : format;
 private import std.traits;
-private import std.typecons : Flag, TypeTuple;
+private import std.typecons : Flag, AliasSeq;
 private import std.range : ElementEncodingType;
 private import std.conv : to;
 private import std.utf : byChar;
@@ -1089,9 +1089,9 @@ private T readInteger(T, R)(auto ref R input)
 private T readN(ubyte size, T, R)(auto ref R input)
 	if(isInputRange!R && is(ElementType!R == ubyte))
 {
-	import std.algorithm : copy, take;
+	import std.algorithm : copy;
 	import std.bitmanip : bigEndianToNative;
-	import std.range : dropExactly;
+	import std.range : dropExactly, take;
 	
 	static assert(T.sizeof == size);
 	static assert(size > 0);
@@ -1122,7 +1122,7 @@ private void dropBytes(R)(auto ref R input, ulong length)
 private ubyte[] readBytes(R)(auto ref R input, ulong length)
 	if(isInputRange!R && is(ElementType!R == ubyte))
 {
-	import std.algorithm : take;
+	import std.range : take;
 	import std.array;
 	if (input.length < length) onInsufficientInput();
 
