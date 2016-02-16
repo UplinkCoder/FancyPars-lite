@@ -4,7 +4,7 @@ void getIndex(HTTPServerRequest req, HTTPServerResponse res) {
 	res.writeBody(`<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 	<head>
-		<title> FancyPras(e) </title> 
+		<title> FancyPars(e) </title> 
 	</head>
 	<body>
 		<h1> Welcome to FancyPars </h1>
@@ -94,25 +94,24 @@ void getGenerateParser(HTTPServerRequest req, HTTPServerResponse res) {
 }
 
 void postGenerateParser(HTTPServerRequest req, HTTPServerResponse res) {
-	import std.stdio;
-	auto allGroups = req.form["grammar"].lex.parse.getAllGroups;
+	
+	auto ag = req.form["grammar"].lex.parse.analyze;
 	auto zipdl = new ZipArchive;
 //	foreach(i,n;["ast.d","lexer.d","parser.d","printer.d"]) {
 //		ArchiveMember member() = new ArchiveMember();
 //		zipdl.addMember()
 //	}
-	auto ag = new GrammerAnalyzer().analyze(req.form["grammar"].lex.parse);
-	pragma(msg, sag.genAST);
+	
 	res.writeBody("\n/***AST***/\n" ~ ag.genAST 
-		~ "\n/***Token***/\n" ~ allGroups.genTokenTypeEnum 
+		~ "\n/***Token***/\n" ~ ag.genTokenTypeEnum 
 
 		~ "\n/***Lexer***/\n" ~ lexer_blrplate_head 
-		~ allGroups.genLex ~ lexer_blrplate_tail 
+		~ ag.genLex ~ lexer_blrplate_tail 
 
-		~ "\n/***Parser***/\n" ~ allGroups.genPars
+		~ "\n/***Parser***/\n" ~ ag.genPars
 
-		/+~ "\n/***Printer***/\n" ~ allGroups.genPrinter+/);
-	res.writeBody(serializeToJson(allGroups).toPrettyString);
+		/+~ "\n/***Printer***/\n" ~ ag.genPrinter+/);
+	res.writeBody(serializeToJson(ag).toPrettyString);
 }
 
 shared static this()
@@ -132,8 +131,6 @@ shared static this()
 
 	logInfo("Please open http://127.0.0.1:8081/ in your browser.");
 }
-
-
 
 
 void hello(HTTPServerRequest req, HTTPServerResponse res)

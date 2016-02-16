@@ -18,11 +18,11 @@ struct EnumifiableGroup_ {
 	}
 }
 
-EnumifiableGroup_* EnumifiableGroup (const Group g) pure {
+EnumifiableGroup_* EnumifiableGroup (const Group pG) pure {
 	EnumifiableGroup_.EnumEntry[] enumEntries;
 
-	if (g.hasGroups) {
-		foreach(eG;g.groups) {
+	if (pG.hasGroups) {
+		foreach(eG;pG.groups) {
 			if (auto _seg = StringElementGroup(eG)) {
 				enumEntries ~= EnumifiableGroup_.EnumEntry(_seg.name, _seg.se);
 			} else {
@@ -30,7 +30,7 @@ EnumifiableGroup_* EnumifiableGroup (const Group g) pure {
 			} 
 		}
 
-		return new EnumifiableGroup_(cast(Identifier)g.name, enumEntries);
+		return new EnumifiableGroup_(cast(Identifier)pG.name, enumEntries);
 	}
 
 	return null;
