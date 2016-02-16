@@ -27,7 +27,7 @@ Token[] lex(in string source) pure {
 
 	
 
-	void putToken(TokenType ttype, char[] data, uint offset=0) {
+	void putToken(TokenType ttype, const(char)[] data, uint offset=0) {
 
 		uint length = offset ? offset : cast(uint) data.length;
 
@@ -151,7 +151,7 @@ Token[] lex(in string source) pure {
 	}
 
 	void lexStringElement() {
-		char[] string_;
+		const(char)[] string_;
 
 		int offset = 1;
 		enforce(peek(0) == '"');

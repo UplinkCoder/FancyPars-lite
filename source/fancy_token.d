@@ -6,7 +6,7 @@ struct Token {
 	uint col;
 	uint length;
 	
-	char[] data;
+	const(char)[] data;
 }
 enum TokenType {
 	TT_0, // INVALID
