@@ -72,7 +72,7 @@ const (Group[]) getDirectLeftRecursiveChildren (const Group g,  const GrammerAna
 const (Group[]) getDirectLeftRecursiveChildren__ (const Group g, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	const(Group)[] result;
 	foreach(group;ag.allGroups) {
-		if (getDirectLeftRecursiveParent(group, ag.groupInformation) == g) {
+		if (getDirectLeftRecursiveParent(group, ag.groupInformation) is g) {
 			result ~= group;
 		}
 	}
