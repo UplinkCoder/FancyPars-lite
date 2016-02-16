@@ -42,7 +42,7 @@ Group parse(in Token[] tokens) pure {
 			if (!__ctfe) {
 				enforce(opt_match(t), "Expected : " ~ to!string(t) ~ " Got : " ~ to!string(peekToken(0)) );
 			} else {
-				assert(opt_match(t),to!string(t));
+				assert(opt_match(t), to!string(t));
 			}
 			return lastMatched;
 		}
@@ -124,10 +124,10 @@ Group parse(in Token[] tokens) pure {
 		bool isLexerElement() {
 			return isLookbehindElement()
 				|| isNamedChar()
-					|| isStringElement()
-					|| isCharRange()
-					|| isRangeElement()
-					|| isNotElement();
+				|| isStringElement()
+				|| isCharRange()
+				|| isRangeElement()
+				|| isNotElement();
 		}
 
 		ASTNode parseASTNode() {
