@@ -1,4 +1,4 @@
-//import vibe.d;
+
 //import sdc.terminal;
 import std.conv;
 import std.algorithm:map,sort;
@@ -11,186 +11,62 @@ import std.zip;
 import biginput;
 import fancy_grammar_fpg;
 
+static immutable _ag = cast(immutable) `Node {
+		EnmGrp { 
+			OptionOne { "option1" }
+			OptionTwo { "option2" }
+		}
 
-//static immutable sag = cast(immutable) new GrammerAnalyzer().analyze(`A {B { ? "a" : bool wasA, ? bool wasA : "b" } }`.lex.parse);
+		DlChrGrp {
+			"'", char chr, "'"
+		}
+
+		RngGrp {
+			[a-zA-Z] id
+		}
+	}`.lex.parse.analyze;
+
+static immutable sag = cast(immutable) GrammerAnalyzer().analyze(`A {B { ? "a" : bool wasA, ? bool wasA : "b" } }`.lex.parse);
 static immutable fpgp = fancyParsGrammar.lex.parse;
-//
-//pragma(msg, sag.genAST);
-
-
-
+static immutable fpga = cast(immutable)fpgp.analyze;
+pragma(msg, fpga.genPrinter);
+pragma(msg, _ag.genPrinter);
 
 static string lexer_blrplate_tail = `
 	return result;
 }`;
 
-//void getIndex(HTTPServerRequest req, HTTPServerResponse res) {
-//	res.writeBody(`<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-//<html>
-//	<head>
-//		<title> FancyPras(e) </title> 
-//	</head>
-//	<body>
-//		<h1> Welcome to FancyPars </h1>
-//		<p> <a href="/generateParser"> generate Parser </a> </p>
-//	</body>
-//</html>`, "text/html");
-//}
-//
-//void getGenerateParser(HTTPServerRequest req, HTTPServerResponse res) {
-//	res.writeBody(`<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-//<html><head>  
-//  <meta content="text/html; charset=ISO-8859-1" http-equiv="content-type"> <title>fancyForm</title></head><body>
-//<form method="post" name="fancyForm" action="/generateParser" enctype="multipart/form-data">
-//  <p> <textarea cols="80" rows="25" name="grammar">ASTNode {
-//    Identifier @internal {
-//        [a-zA-Z_][] identifier
-//    }
-//
-//    Group @parent {
-//        Identifier name, ? "@" : Identifier[] annotations : "@", "{",
-//            PatternElement[] elements : "," / Group[] groups,
-//             "}"
-//    }   
-//
-//    PatternElement @internal {
-//
-//        AlternativeElement @noFirst {
-//            PatternElement[] alternatives : "/"
-//        }
-//
-//        LexerElement {
-//
-//            StringElement {
-//                "\"", char[] string_, "\""
-//            }
-//
-//            NamedChar {
-//                "char", ? "[]" : bool isArray, Identifier name
-//            }
-//
-//            CharRange @internal {
-//                char rangeBegin,  ? "-" : char RangeEnd
-//            }
-//
-//            RangeElement {
-//                "[", CharRange[] ranges, "]"
-//            }
-//
-//            LookbehindElement {
-//                "?lb", "(", StringElement str, ")"
-//            }
-//
-//            NotElement {
-//                "!", LexerElement ce
-//            }
-//
-//        }
-//
-//        NamedElement {
-//            Identifier type,  ? "[]" : bool isArray, Identifier name, 
-//            ? bool isArray : ? ":" : StringElement lst_sep
-//        }
-//
-//        ParenElement {
-//            "(", PatternElement[] elements : ",", ")" 
-//        }
-//
-//        FlagElement {
-//            "bool", Identifier flag_name
-//        }
-//
-//        QueryElement {
-//            "?", "bool", Identifier flag_name, ":", PatternElement elem
-//        }
-//
-//        OptionalElement {
-//            "?", LexerElement[] ce : ",", ":", PatternElement elem
-//        }
-//
-//    }
-//}
-//
-//</textarea> </p>
-// <p> <input value="Generate AST" type="submit"> </p>
-//</form>
-//</body></html>`,"text/html");
-//}
-//
-//void postGenerateParser(HTTPServerRequest req, HTTPServerResponse res) {
-//	import std.stdio;
-//	auto allGroups = req.form["grammar"].lex.parse.getAllGroups;
-//	auto zipdl = new ZipArchive;
-////	foreach(i,n;["ast.d","lexer.d","parser.d","printer.d"]) {
-////		ArchiveMember member() = new ArchiveMember();
-////		zipdl.addMember()
-////	}
-//	auto ag = new GrammerAnalyzer().analyze(req.form["grammar"].lex.parse);
-//	pragma(msg, sag.genAST);
-//	res.writeBody("\n/***AST***/\n" ~ ag.genAST 
-//		~ "\n/***Token***/\n" ~ allGroups.genTokenTypeEnum 
-//
-//		~ "\n/***Lexer***/\n" ~ lexer_blrplate_head 
-//		~ allGroups.genLex ~ lexer_blrplate_tail 
-//
-//		~ "\n/***Parser***/\n" ~ allGroups.genPars
-//
-//		/+~ "\n/***Printer***/\n" ~ allGroups.genPrinter+/);
-//	res.writeBody(serializeToJson(allGroups).toPrettyString);
-//}
-//
-//shared static this()
-//{
-//	auto router = new URLRouter;
-//	router.get("/",&getIndex);
-//	router.get("/generateParser",&getGenerateParser);
-//	router.post("/generateParser",&postGenerateParser);
-//
-//
-//	router.get("*", serveStaticFiles("public/"));
-//	auto settings = new HTTPServerSettings;
-//	//settings.bindAddresses = ["::1", "127.0.0.1"];
-//	settings.sessionStore = new MemorySessionStore();
-//	settings.port = 8081;
-//	listenHTTP(settings, router);
-//
-//	logInfo("Please open http://127.0.0.1:8081/ in your browser.");
-//}
-//
-//
-//
-//
-//void hello(HTTPServerRequest req, HTTPServerResponse res)
-//{
-//	res.writeBody("Hello, World!");
-//}
 void main(string[] args) {
+
 	import std.stdio;
 	import std.file;
 	import std.algorithm:filter;
 	import std.exception;
-//	writeln("SAG GENAST:");
-//	writeln(sag.genAST);
-	auto fpga = ((new GrammerAnalyzer).analyze(fpgp));
-	//writeln(fpga.genAST ~ fpga.genTokenTypeEnum ~  fpga.genLex ~ fpga.genPars);
+
+//	pragma(msg, fpga.genAST ~ fpga.genToken ~  fpga.genLex ~ fpga.genPars);
+
 	import std.traits;
 	if (args.length == 2) {
 
 		enforce(args[1][$-4 .. $] == ".fpg", "files have to have the .fpg extention");
 		string grammar = readText(args[1]);
-		auto ag = new GrammerAnalyzer().analyze(grammar.lex.parse);
+		auto ag = GrammerAnalyzer().analyze(grammar.lex.parse);
+
 		string name = args[1][0 .. $-4];
+		import std.path : baseName;
+		string basename = baseName(name);
+
 		File ast = File(name ~ "_ast.d","wb");
 		File parser = File(name ~ "_parser.d","wb");
 		File lexer = File(name ~ "_lexer.d","wb");
 		File printer = File(name ~ "_printer.d","wb");
 		File token = File(name ~ "_token.d","wb");
 
-		ast.writeln(ag.genAST);
 		token.writeln(ag.genToken());
-		lexer.writeln("import " ~ name ~ "_token;\n", lexer_blrplate_head, ag.genLex(), lexer_blrplate_tail);
-		parser.writeln("import " ~ name ~ "_token;\nimport " ~ name ~ "_ast;\n", ag.genPars());
-		printer.writeln("import " ~ name ~ "_ast;\n", ag.genPrinter());
+		ast.writeln("import " ~ basename ~ "_token;\n" ~ ag.genAST);
+		lexer.writeln("import " ~ basename ~ "_token;\n", lexer_blrplate_head, ag.genLex(), lexer_blrplate_tail);
+		parser.writeln("import " ~ basename ~ "_token;\nimport " ~ basename ~ "_ast;\n", ag.genPars());
+		printer.writeln("import " ~ basename ~ "_ast;\n", ag.genPrinter());
 
 		foreach(e;ag.allElements.filter!(e => cast(AnonymousGroupElement)e)) {
 			writeln(cast(PatternElement)e);
