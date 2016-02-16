@@ -7,7 +7,6 @@
 
 	"authors": ["Stefan Koch"],
 	"dependencies": {
-		"vibe-d": "0.7.22"
 	},
-	"versions": ["VibeDefaultMain"]
+	"versions": ["VibeNoDefaultMain"]
 }
