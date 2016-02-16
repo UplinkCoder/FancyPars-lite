@@ -289,14 +289,6 @@ bool isSame (const PatternElement e1, const PatternElement e2) {
 
 }
 
-auto ASTMembers(ER)(ER elementRange) if (is(Unqual!(ElementType!ER) : PatternElement)) {
-	return elementRange
-		.map!(e =>  e ~ e.containingElements)
-		.join
-		.filter!(e => e.isASTMember);
-}
-
-
 const(PatternElement)[] containingElements(const PatternElement elem) {
 	if (auto ae = cast(AlternativeElement)elem) {
 		const(PatternElement)[] res;
@@ -561,4 +553,24 @@ alias AnalyzedGrammar = GrammerAnalyzer.AnalyzedGrammar;
 
 AnalyzedGrammar analyze(const Group root) pure {
 	return GrammerAnalyzer().analyze(root);
+}
+
+auto astMembers(const AnalyzedGrammar ag, const Group eG) pure {
+	const(PatternElement)[] astMembers = null;
+	foreach(gi;ag.groupInformation) {
+		if (gi.group is eG) {
+			astMembers = gi.groupInformation.astMembers;
+		}
+	}
+	return astMembers;
+}
+
+auto astMembers(const PatternElement pe) pure {
+	const(PatternElement)[] astMembers = null;
+	foreach(ce; pe.containingElements) {
+		if (isASTMember(ce)) {
+			astMembers ~= ce;
+		}
+	}
+	return astMembers;
 }

@@ -35,13 +35,11 @@ string print(const `~ ag.allGroups[0].name.identifier ~` root) pure {
 					~ "}\n".indentBy(3);
 			}
 			} else if (auto alte = cast(AlternativeElement)e) {
-				foreach (alt;alte.alternatives.ASTMembers) {
-				if (alt.isASTMember) {
+				foreach (alt;astMembers(alte)) {
 					result ~= "if (g.".indentBy(3) ~ getName(alt) 
 						~ ") {\n" ~ genPtrStmt(alt) 
 						~ "}".indentBy(3);
 				}
-			}
 			} else if (auto ne = cast(NamedElement)e) {
 				if (ne.isArray) {
 				result ~= "foreach(_e;".indentBy(3)

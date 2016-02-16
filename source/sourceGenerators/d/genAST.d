@@ -59,12 +59,7 @@ string genAST(const GrammerAnalyzer.AnalyzedGrammar ag, const Group parent = nul
 	result ~= " {\n\tMyLocation loc;\n}\n\n";
 	// duplicated alot of code 
 	foreach(eG;ag.allGroups[0].groups.filter!(g => !g.hasGroups)) {
-		const(PatternElement)[] astMembers;
-		foreach(gi;ag.groupInformation) {
-			if (gi.group is eG) {
-				astMembers = gi.groupInformation.astMembers;
-			}
-		}
+		auto astMembers = ag.astMembers(eG);
 
 		
 		result ~= "final class " 
@@ -121,12 +116,7 @@ string genAST(const GrammerAnalyzer.AnalyzedGrammar ag, const Group parent = nul
 				~ " {}\n\n";
 
 		foreach(eG;pG.groups.filter!(g => !g.hasGroups)) {
-			const(PatternElement)[] astMembers;
-			foreach(gi;ag.groupInformation) {
-				if (gi.group is eG) {
-					astMembers = gi.groupInformation.astMembers;
-				}
-			}
+			auto astMembers = ag.astMembers(eG);
 
 			result ~= "final class " 
 				~ eG.name.identifier ~ " : "
