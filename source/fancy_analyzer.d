@@ -317,7 +317,7 @@ const(PatternElement)[] containingElements(const PatternElement elem) {
 		foreach(elm;oe.ce) {
 			res ~= [elm] ~ elm.containingElements;
 		}
-		res ~= oe.elem;
+		res ~= [oe.elem];
 		return cast(const)res;
 	} else if (auto _ne = cast(NamedElement)elem) {
 		return cast(const)(_ne.lst_sep ? [cast(PatternElement)_ne.lst_sep] : null); 
