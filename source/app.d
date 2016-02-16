@@ -1,5 +1,5 @@
 //import vibe.d;
-import sdc.terminal;
+//import sdc.terminal;
 import std.conv;
 import std.algorithm:map,sort;
 import fancy_lexer;
