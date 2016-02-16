@@ -2,8 +2,9 @@ module sourceGenerators.d.genToken;
 import std.range;
 import fancy_analyzer;
 import fancy_util;
-extern string genToken(const GrammerAnalyzer.AnalyzedGrammar ag) {
-	immutable static string token_blrplate = `
+import fancy_grammar_patterns;
+
+immutable static string token_blrplate = `
 struct Token {
 	TokenType type;
 	
@@ -15,7 +16,8 @@ struct Token {
 	char[] data;
 }
 `;
-	
+
+extern string genToken(const GrammerAnalyzer.AnalyzedGrammar ag) {
 	string genTokenSize(SortedRange!(string[], "a < b") strings) pure {
 		import std.conv:to;
 		
@@ -42,7 +44,14 @@ struct Token {
 		
 		{
 			uint i;
-			foreach(s;strings.filter!((s) {i++;return s.length != maxKey;})) {
+		Loop : foreach(s;strings) {
+				/* .filter!((s) {i++;return s.length != maxKey;})	
+				 * does not work with gdc because filter is infered impure
+				 */
+				i++;
+				if (s.length != maxKey) {
+					continue Loop;
+				}
 				result  ~= "case TokenType.TT_".indentBy(2) 
 					~ to!string(i) 
 						~ " : return " ~ s.length.to!string ~ ";\n"; 
