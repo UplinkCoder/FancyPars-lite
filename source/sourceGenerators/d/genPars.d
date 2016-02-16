@@ -2,6 +2,7 @@ module sourceGenerators.d.genPars;
 import sourceGenerators.d.common;
 import fancy_ast;
 import fancy_analyzer;
+import fancy_grammar_patterns;
 import fancy_util;
 import std.algorithm;
 import std.range;
@@ -11,7 +12,7 @@ import std.string;
 pure :
 alias Group = fancy_ast.Group;
 
-static immutable string parser_blrplate_head = ` parse(in Token[] tokens) pure { 
+static immutable parser_blrplate_head = ` parse(in Token[] tokens) pure { 
 	struct Parser {
 	pure :
 		const(Token[]) tokens;
@@ -61,13 +62,22 @@ extern string genPars(const GrammerAnalyzer.AnalyzedGrammar ag) pure {
 	char[] result;
 	string parent_name = null;
 	auto pg = ParserGenerator(ag);
-	
+	const(Group)[] excludedGroups;
+
 	foreach(group;ag.allGroups) {
 		if (group.hasAnnotation("parent")) {
 			parent_name = group.name.identifier;
 		}
-
-		result ~= pg.genParse(group);
+		if (auto eg = EnumifiableGroup(group)) {
+			result ~= pg.enumify(*eg, 2);
+			excludedGroups ~= group.groups;
+			debug {
+				import std.stdio;
+				writeln(excludedGroups.map!(a => a.name.identifier));
+			}
+		} else {
+			result ~= (!excludedGroups.canFind!((a,b) => a is b)(group) ? pg.genParse(group) : "");
+		}
 	}
 
 	if (!parent_name) {
@@ -132,7 +142,7 @@ pure :
 		foreach(pG;allGroups.getParentGroups.filter!(g => !g.hasAnnotation("noFirst"))) {
 			result ~= "\n" ~ "bool is".indentBy(2) 
 				~ pG.name.identifier
-					~ "() {\n" ~ "return".indentBy(3);
+				~ "() {\n" ~ "return".indentBy(3);
 			
 			auto ocGS = pG.groups.orderByLength;
 
@@ -210,9 +220,33 @@ pure :
 		}
 	}
 
+	char[] enumify(const EnumifiableGroup_ eg, uint iLvl) {
+		auto gid = eg.name.identifier;
+		auto lgid =	(cast(char)gid[0].toLower) ~ gid[1 .. $];
+		
+		char[] result =  gid.indentBy(iLvl++)
+			~ " parse" ~ gid ~ "() {\n"
+				~  gid.indentBy(iLvl) ~ " " ~ lgid ~ ";"
+				~ "\n" ~ "".indentBy(iLvl);
+		
+		foreach(entry;eg.enumEntries) {
+			result ~= "if (opt_match(" 
+				~ getTokenType(entry.enumValue) 
+					~ ")) {\n" ~ lgid.indentBy(iLvl+1) 
+					~ " = new " ~ gid ~ "(" ~ gid ~ "Enum." 
+					~ entry.enumName.identifier
+					~ ");\n" ~ "} else ".indentBy(iLvl);
+		}
+
+		result ~= "assert(0, \"No such EnumValue\");\n\n" ~ "return ".indentBy(iLvl)
+			~ lgid ~ ";\n" ~ "}\n\n".indentBy(--iLvl);
+		
+		return result;
+	}
+
 	string genParse(const Group group, uint iLvl = 2) {
 		auto dlrcs = getDirectLeftRecursiveChildren(group, ag);
-		
+
 		bool hasRecursiveChildren = dlrcs !is null;
 		
 		if (group.elements.any!(e => cast (NamedChar)e)) {
@@ -220,7 +254,8 @@ pure :
 		}
 		
 		char[] result;
-		
+
+
 		char[] genNameEnum() {
 			char[] result = cast(char[])"enum " ~ group.name.identifier
 				~ "RCEnum {\n" ~ "__Init,\n".indentBy(iLvl+1);
