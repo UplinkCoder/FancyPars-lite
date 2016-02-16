@@ -44,13 +44,13 @@ extern string genToken(const GrammerAnalyzer.AnalyzedGrammar ag) {
 		
 		{
 			uint i;
-		Loop : foreach(s;strings) {
+		foreach(s;strings) {
 				/* .filter!((s) {i++;return s.length != maxKey;})	
 				 * does not work with gdc because filter is infered impure
 				 */
 				i++;
 				if (s.length != maxKey) {
-					continue Loop;
+					continue;
 				}
 				result  ~= "case TokenType.TT_".indentBy(2) 
 					~ to!string(i) 

@@ -124,7 +124,7 @@ string genLex(const GrammerAnalyzer.AnalyzedGrammar ag) {
 										~ "return TokenType.TT_".indentBy(j+4) ~ to!string(i-k) ~ ";\n";
 								}
 							} else {
-								debug {import std.stdio;writeln(strings[i]);}
+								debug {import std.stdio;if (!__ctfe) {writeln(strings[i]);} }
 							}
 						}
 					} else {
