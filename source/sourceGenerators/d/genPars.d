@@ -342,7 +342,13 @@ pure :
 				~ group.name.identifier[0..1].toLower ~ ";\n";
 			result ~= "\t\t\tret.loc = loc;\n\t\t\treturn ret;\n";
 		} else {
-			foreach (element;group.elements.ASTMembers) {
+			const(PatternElement)[] astMembers;
+			foreach(gi;ag.groupInformation) {
+				if (gi.group is group) {
+					astMembers = gi.groupInformation.astMembers;
+				}
+			}
+			foreach (element;astMembers) {
 				result ~= genDecl(element).indentBy(iLvl);
 			}
 			result ~= "\n";
@@ -363,12 +369,12 @@ pure :
 `;
 			result ~= "auto ret = new ".indentBy(iLvl) 
 				~ group.name.identifier ~ "(";
-			
-			foreach(element;group.elements.ASTMembers) {
+
+			foreach(element;astMembers) {
 				result ~= getName(element) ~ ", ";
 			}
 			
-			if (!group.elements.ASTMembers.empty) {
+			if (!astMembers.empty) {
 				result = result[0..$-2];
 			}
 			
@@ -452,8 +458,6 @@ pure :
 			foreach(alt;ae.alternatives/*reorderByPrefix*/) {
 				//there are just 2 special cases
 				//OptionalElement and QueryElement
-
-				
 				if(alt.isASTMember) {
 					result ~= "if (" ~ condOf(alt) 
 						~ ") {\n";
@@ -465,7 +469,7 @@ pure :
 			}
 			result = result[0..$-5] ~ "\n";
 		} else {
-			//assert(0, typeid(element).to!string ~ " is not handled");
+			assert(0, typeid(element).to!string ~ " is not handled");
 		}
 		
 		leftRecursiveElement = false;
@@ -478,12 +482,17 @@ pure :
 
 		result ~= "return new ".indentBy(iLvl) 
 			~ group.name.identifier ~ "(";
-		
-		foreach(element;group.elements.ASTMembers) {
+		const(PatternElement)[] astMembers;
+		foreach(gi;ag.groupInformation) {
+			if (gi.group is group) {
+				astMembers = gi.groupInformation.astMembers;
+			}
+		}
+		foreach(element;astMembers) {
 			result ~= getName(element) ~ ", ";
 		}
 
-		if (!group.elements.ASTMembers.empty) {
+		if (!astMembers.empty) {
 			result = result[0..$-2];
 		}
 		
