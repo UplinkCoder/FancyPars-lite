@@ -297,24 +297,32 @@ auto ASTMembers(ER)(ER elementRange) if (is(Unqual!(ElementType!ER) : PatternEle
 }
 
 
-auto containingElements(const PatternElement elem) {
+const(PatternElement)[] containingElements(const PatternElement elem) {
 	if (auto ae = cast(AlternativeElement)elem) {
-		return cast(const)ae.alternatives;
+		const(PatternElement)[] res;
+		foreach(elm;ae.alternatives) {
+			res ~= [elm] ~ elm.containingElements;
+		}
+		return cast(const)res;
 	} else if (auto ne = cast(NotElement)elem) {
-		return cast(const)[cast(PatternElement)ne.ce];
+		return cast(const)[cast(PatternElement)ne.ce] ~ ne.ce.containingElements;
 	} else if (auto pe = cast(ParenElement)elem) {
-		return cast(const)pe.elements;
+		const(PatternElement)[] res;
+		foreach(elm;pe.elements) {
+			res ~= [elm] ~ elm.containingElements;
+		}
+		return cast(const)res;
 	} else if (auto oe = cast(ConditionalElement)elem) {
-		PatternElement[] res;
+		const(PatternElement)[] res;
 		foreach(elm;oe.ce) {
-			res ~= elm;
+			res ~= [elm] ~ elm.containingElements;
 		}
 		res ~= oe.elem;
 		return cast(const)res;
 	} else if (auto _ne = cast(NamedElement)elem) {
 		return cast(const)(_ne.lst_sep ? [cast(PatternElement)_ne.lst_sep] : null); 
 	}  else if (auto qe = cast(QueryElement)elem) {
-		return cast(const)([qe.elem]); 
+		return (cast(const)([qe.elem])) ~ qe.elem.containingElements; 
 	} else {
 		return null;
 	}
@@ -368,6 +376,10 @@ struct GrammerAnalyzer {
 		bool hasGroups;
 		bool isRangeGroup;
 		bool isDelimitedCharGroup;
+		///only applys to elementGroups
+		///eg. hasGroups == false;
+		const(PatternElement)[] astMembers;
+
 		Group directLeftRecursiveParent;
 		Group[] directLeftRecursiveChildren;
 		
@@ -515,10 +527,19 @@ struct GrammerAnalyzer {
 				}
 			} else {
 				foreach(el;root.elements) {
+					if (el.isASTMember) {
+						gi.astMembers ~= el;
+					}
+					foreach(ce;el.containingElements) {
+						if (ce.isASTMember) {
+							gi.astMembers ~= ce;
+						}
+					}
 					result.allElements ~= el;
 					ElementInformation ei;
 					ei.parentGroup = cast(Group)root;
 					analyzeElement(ei, cast(PatternElement)el, result, _strings);
+
 					result.elementInformation ~= ElementInformationTuple(el, ei);
 				}
 			}
