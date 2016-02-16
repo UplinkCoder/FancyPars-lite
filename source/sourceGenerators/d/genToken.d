@@ -50,11 +50,10 @@ extern string genToken(const GrammerAnalyzer.AnalyzedGrammar ag) {
 				 */
 				i++;
 				if (s.length != maxKey) {
-					continue;
+					result  ~= "case TokenType.TT_".indentBy(2) 
+						~ to!string(i) 
+							~ " : return " ~ s.length.to!string ~ ";\n";
 				}
-				result  ~= "case TokenType.TT_".indentBy(2) 
-					~ to!string(i) 
-						~ " : return " ~ s.length.to!string ~ ";\n"; 
 			}
 		}
 		
