@@ -10,12 +10,20 @@ import std.string : toLower;
 import std.algorithm:filter;
 
 static immutable locationString = q{
-struct MyLocation {
-	uint line;
-	uint col;
-	uint index;
-	uint length;
-}
+	struct MyLocation {
+		uint line;
+		uint col;
+		uint index;
+		uint length;
+		
+		this(Token first, Token last) {
+			line = first.line;
+			col = first.col;
+			index = first.pos;
+			length = (first.pos - last.pos) + last.length;
+		}
+	}
+
 };
 
 string enumify (const EnumifiableGroup_ g, const Group p) {
@@ -51,7 +59,13 @@ string genAST(const GrammerAnalyzer.AnalyzedGrammar ag, const Group parent = nul
 	result ~= " {\n\tMyLocation loc;\n}\n\n";
 	// duplicated alot of code 
 	foreach(eG;ag.allGroups[0].groups.filter!(g => !g.hasGroups)) {
-		auto astMembers = eG.elements.ASTMembers();
+		const(PatternElement)[] astMembers;
+		foreach(gi;ag.groupInformation) {
+			if (gi.group is eG) {
+				astMembers = gi.groupInformation.astMembers;
+			}
+		}
+
 		
 		result ~= "final class " 
 			~ eG.name.identifier ~ " : "
@@ -107,8 +121,13 @@ string genAST(const GrammerAnalyzer.AnalyzedGrammar ag, const Group parent = nul
 				~ " {}\n\n";
 
 		foreach(eG;pG.groups.filter!(g => !g.hasGroups)) {
-			auto astMembers = eG.elements.ASTMembers();
-			
+			const(PatternElement)[] astMembers;
+			foreach(gi;ag.groupInformation) {
+				if (gi.group is eG) {
+					astMembers = gi.groupInformation.astMembers;
+				}
+			}
+
 			result ~= "final class " 
 				~ eG.name.identifier ~ " : "
 					~ pG.name.identifier ~ " {";
