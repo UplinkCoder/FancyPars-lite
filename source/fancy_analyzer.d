@@ -7,6 +7,7 @@ import std.range;
 import std.algorithm:filter,map,partition,sort,commonPrefix,multiSort,countUntil,any,all,joiner;
 import std.array;
 
+import fancy_grammar_patterns;
 
 private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const uint i) pure {
 	assert(group.elements.length>i);
@@ -20,7 +21,7 @@ private auto disambiguationElements_(const (Group)[] canidateGroups, const Group
 
 }
 
-auto disambiguationElements(const Group grp,const GrammerAnalyzer.AnalyzedGrammar ag) {
+auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	PatternElement[][] daes;
 	auto grs = cast(const(Group)[]) ag.allGroups;
 	auto p = cast (Group) getDirectLeftRecursiveParent(ag.allGroups.getGroupNamed(grp.name.identifier), ag.groupInformation);
@@ -165,56 +166,6 @@ const(PatternElement[][]) splitOptionals(const PatternElement[] elms) {
 
 }
 
-//const(Group[]) getAllGroups(const Group root) {
-//	return cast(const(Group[]))getAllGroups(cast(Group)root, null);
-//}
-
-//Group[] getAllGroups(Group root, Group parent) {
-//	Group[] result;
-//	
-//	if (root.hasGroups) {
-//		Group g = new Group(cast(Identifier)root.name, cast(Identifier[])root.annotations, null, (cast(Group[])(root.groups)).dup);
-//		cast(Group)(g.parent) = cast(Group)parent;
-//		result ~= g;
-//
-//		foreach(gr;g.groups) {
-//			result ~= cast(Group[])getAllGroups(gr, g);
-//		}
-//
-//	} else {
-//		PatternElement[] elements;
-//		foreach(elm;cast(PatternElement[])root.elements) {
-//			elements ~= elm;
-//			elements[$-1].parent = root;
-//		}
-//
-//		result ~= new Group(cast(Identifier)root.name, cast(Identifier[])root.annotations, elements, null);
-//		cast(Group)(result[$-1].parent) = cast(Group)parent;
-//		
-//	}
-//	return result;
-//}
-//const (PatternElement)[] getAllElements (const (PatternElement)[] elements) {
-//	return cast(const PatternElement[]) getAllElements (cast(PatternElement[])elements, null);
-//}
-
-//PatternElement[] getAllElements(PatternElement[] elements, ASTNode parent) {
-//	PatternElement[] result;
-//
-//	foreach(elm;elements) {
-//		 {
-//			result ~= elm;
-//			if (parent) {
-//				result[$-1].parent = parent;
-//			}
-//			if (elm.containingElements) {
-//				result ~= getAllElements(elm.containingElements, result[$-1]);
-//			}
-//		}
-//	}
-//	return result;
-//}
-
 const (Group) getGroupNamed(GR)(GR groupRange, const string name) if (is(Unqual!(ElementType!GR) : Group)) {
 	auto canidates = groupRange
 		.filter!(g => g.name.identifier == name);
@@ -227,30 +178,6 @@ const (Group) getGroupNamed(GR)(GR groupRange, const string name) if (is(Unqual!
 
 	return group;
 }
-//SortedRange!(string[], "a < b") getStrings(const (Group[]) allGroups) { 
-//	string[] strings;
-//
-//	foreach(elements;allGroups
-//		.getElementGroups
-//		.map!(g => g.elements)
-//		) {
-//		foreach (elm;elements.getAllElements) {
-//			if (auto e = cast(StringElement)elm) {
-//				bool isIn;
-//				foreach(str;strings) {
-//					if (str==e.string_) {
-//						isIn = true;
-//						break;
-//					}
-//				}
-//				if (!isIn) {
-//					strings ~= e.string_.idup;
-//				}
-//			}
-//		}
-//	}
-//	return sort(strings);
-//}
 
 auto orderByLength(const (Group)[] groups) {
 	auto part = (cast(Group[])groups).partition!(g => g.hasGroups);
@@ -262,7 +189,7 @@ auto orderByLength(const (Group)[] groups) {
 }
 
 auto orderByPrefix(const (Group)[] groups) {
-	const uint[const PatternElement] rank; 
+	uint[const PatternElement] rank; 
 	uint[const PatternElement] seenFirsts;
 	const(PatternElement)[][const PatternElement] knownPrefixs;
 
@@ -362,7 +289,6 @@ bool isSame (const PatternElement e1, const PatternElement e2) {
 
 }
 
-
 auto ASTMembers(ER)(ER elementRange) if (is(Unqual!(ElementType!ER) : PatternElement)) {
 	return elementRange
 		.map!(e =>  e ~ e.containingElements)
@@ -370,54 +296,6 @@ auto ASTMembers(ER)(ER elementRange) if (is(Unqual!(ElementType!ER) : PatternEle
 		.filter!(e => e.isASTMember);
 }
 
-auto LexerGroup (const Group grp) {
-	return  RangeGroup(grp) ? grp : DelimitedCharGroup(grp) ? grp : null;
-}
-
-auto RangeGroup(const Group grp) {
-	struct RangeGroup_ {
-		Identifier name;
-		RangeElement re;
-	}
-	if (grp.elements.length == 1) {
-		RangeGroup_* rg = new RangeGroup_();
-		rg.re = cast(RangeElement)grp.elements[0];
-		if (rg.re !is null) {
-			rg.name = cast (Identifier)grp.name;
-			return rg;
-		}
-		rg.destroy;
-	}
-
-	return null;
-}
-
-auto DelimitedCharGroup(const Group grp) {
-	struct DelimitedCharGroup_ {
-		Identifier name;
-		StringElement begin;
-		NamedChar content;
-		StringElement end;
-	}
-
-	if (grp.elements.length == 3) {
-		DelimitedCharGroup_* dcg = new DelimitedCharGroup_();
-		dcg.begin = cast(StringElement)grp.elements[0];
-		dcg.content = cast(NamedChar)grp.elements[1];
-		dcg.end = cast(StringElement)grp.elements[2];
-
-		if (dcg.begin !is null
-			&& dcg.content !is null
-			&& dcg.end !is null
-			) {
-			dcg.name = cast(Identifier) grp.name;
-			return dcg;
-		}
-		dcg.destroy;
-	}
-
-	return null;
-}
 
 auto containingElements(const PatternElement elem) {
 	if (auto ae = cast(AlternativeElement)elem) {
@@ -469,7 +347,7 @@ bool isASTMember(const PatternElement element) {
 	return (ne || fe || re || nc || age/*|| ce*/);
 }
 
-final class GrammerAnalyzer {
+struct GrammerAnalyzer {
 	static auto getElementInformation(const PatternElement e,const AnalyzedGrammar ag) {
 		Nullable!(ElementInformation) ret;
 		foreach(ei;ag.elementInformation) {
@@ -532,7 +410,7 @@ final class GrammerAnalyzer {
 		}
 	}
 
-	void analyzeElement(ref ElementInformation ei, PatternElement elm, ref AnalyzedGrammar ag, PatternElement parent = null) pure {
+	void analyzeElement(ref ElementInformation ei, PatternElement elm, ref AnalyzedGrammar ag, ref string[] strings, PatternElement parent = null) pure {
 
 		ei.parentElement = parent;
 		if (ag.allElements[$-1] !is elm) ag.allElements ~= elm;
@@ -579,14 +457,14 @@ final class GrammerAnalyzer {
 				} else if (auto e = cast(StringElement) elm) {
 					ei.eType = _StringElement;
 					bool dontAdd = false;
-					foreach(str;ag._strings) {
+					foreach(str;strings) {
 						if (str == e.string_) {
 							dontAdd = true;
 							break;
 						}
 					}
 					if (!dontAdd) {
-						ag._strings ~= cast(string)e.string_;
+						strings ~= (cast(string)e.string_);
 					}
 				}
 			}
@@ -594,7 +472,7 @@ final class GrammerAnalyzer {
 			if (ei.containingElements) {
 				foreach(ce;ei.containingElements) {
 					ElementInformation cei;
-					analyzeElement(cei, ce, ag, elm);
+					analyzeElement(cei, ce, ag, strings, elm);
 					ag.elementInformation ~= ElementInformationTuple(ce, cei);
 				}
 			}
@@ -604,7 +482,6 @@ final class GrammerAnalyzer {
 
 	static struct AnalyzedGrammar {
 		string rootNodeName;
-		string[] _strings;
 		SortedRange!(string[], "a < b") strings;
 		const(Group)[] allGroups;
 		const(PatternElement)[] allElements;
@@ -636,13 +513,12 @@ final class GrammerAnalyzer {
 				foreach(gr;root.groups) {
 					getAllGroups(gr, root);
 				}
-				
 			} else {
 				foreach(el;root.elements) {
 					result.allElements ~= el;
 					ElementInformation ei;
 					ei.parentGroup = cast(Group)root;
-					analyzeElement(ei, cast(PatternElement)el, result);
+					analyzeElement(ei, cast(PatternElement)el, result, _strings);
 					result.elementInformation ~= ElementInformationTuple(el, ei);
 				}
 			}
@@ -653,10 +529,15 @@ final class GrammerAnalyzer {
 
 		getAllGroups(root);
 	//	assert(_strings.length);
-		result.strings = sort(result._strings);
+		result.strings = sort(_strings);
 		result.rootNodeName = root.name.identifier;
 
 		return result;
 	}
 	
+}
+alias AnalyzedGrammar = GrammerAnalyzer.AnalyzedGrammar;
+
+AnalyzedGrammar analyze(const Group root) pure {
+	return GrammerAnalyzer().analyze(root);
 }

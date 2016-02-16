@@ -1,0 +1,2 @@
+﻿module sourceGenerators.d.enumify;
+
