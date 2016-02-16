@@ -7,11 +7,12 @@ import std.traits:Unqual;
 import fancy_util;
 import fancy_ast;
 import fancy_analyzer;
+import fancy_grammar_patterns;
 alias Group = fancy_ast.Group;
 
 
 
-static string lexer_blrplate_head = `
+static immutable string lexer_blrplate_head = `
 import std.exception;
 Token[] lex(in string source) pure {
 	uint col;
@@ -92,7 +93,7 @@ string genLex(const GrammerAnalyzer.AnalyzedGrammar ag) {
 		
 		foreach(uint i,str;strings) {
 			result ~= "\n";
-			
+
 			if (i<strings.length-1) {
 				next = strings[i+1];
 			} else {
@@ -144,7 +145,7 @@ string genLex(const GrammerAnalyzer.AnalyzedGrammar ag) {
 			
 		}
 		
-		return "\n\tTokenType lexFixedToken(char[" ~ to!string(longestSoFar) ~ "] _chrs) {\n\t\tswitch(_chrs[0]) {\n\t\tdefault :\n\t\t\treturn TokenType.TT_0;\n" ~ result ~ "\n\t\t}\t\n}";
+		return "\n\tTokenType lexFixedToken(char[" ~ to!string(longestSoFar) ~ "] _chrs) {\n\t\tswitch(_chrs[0]) {\n\t\tdefault :\n\t\t\treturn TokenType.TT_0;\n" ~ result ~ "\n\t\t}\n\t}\n";
 	}
 
 
