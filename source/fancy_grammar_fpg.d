@@ -1,6 +1,28 @@
 ﻿module fancy_grammar_fpg;
 
-static immutable string fancyParsGrammar  = `ASTNode {
+
+/+
+ 		ActionElement @internal {
+			"(", ? Identifier[] args : (), ")",
+			 "{", char[] code_, "}" 
+		}
+		+/
+
+/+
+		-> { 	
+				bool wasSlash;
+				foreach(i,c;string_) {
+					if (wasSlash) {
+						char nextChar;
+						switch (c) {
+						}
+						string_ = string_[0 .. i] ~ nextChar ~ string_[i+1 .. $];
+					} else if (c == '\') wasSlash = true;
+				}  
+			}
++/
+static immutable string fancyParsGrammar  = `
+ASTNode {
     Identifier @internal {
         [a-zA-Z_][] identifier
     }
@@ -11,8 +33,7 @@ static immutable string fancyParsGrammar  = `ASTNode {
              "}"
     }   
 
-    PatternElement @internal {
-
+    PatternElement @internal {		
         AlternativeElement @noFirst {
             PatternElement[] alternatives : "/"
         }
@@ -67,7 +88,7 @@ static immutable string fancyParsGrammar  = `ASTNode {
         }
 
         ConditionalElement {
-            "?", LexerElement[] ce : ",", ":", PatternElement elem
+            "?", PatternElement ce, ":", PatternElement elem
  		}
 
     }

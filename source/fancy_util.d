@@ -1,4 +1,4 @@
-﻿module fancy_util;
+module fancy_util;
 import std.traits;
 
 auto assumePure(T)(T t)

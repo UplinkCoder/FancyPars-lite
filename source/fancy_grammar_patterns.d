@@ -1,4 +1,4 @@
-﻿module fancy_grammar_patterns;
+module fancy_grammar_patterns;
 import fancy_ast;
 
 pure : 
@@ -36,7 +36,9 @@ EnumifiableGroup_* EnumifiableGroup (const Group g) pure {
 	return null;
 }
 
-
+struct LexerElementConditionElement {
+	LexerElement[] conds;
+}
 
 struct StringElementGroup_ {
 	Identifier name;

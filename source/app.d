@@ -26,7 +26,7 @@ static immutable _ag = cast(immutable) `Node {
 		}
 	}`.lex.parse.analyze;
 
-static immutable sag = cast(immutable) GrammerAnalyzer().analyze(`A {B { ? "a" : bool wasA, ? bool wasA : "b" } }`.lex.parse);
+static immutable sag = `A {B { ? "a" : bool wasA, ? bool wasA : "b" } }`.lex.parse.analyze;
 static immutable fpgp = fancyParsGrammar.lex.parse;
 static immutable fpga = cast(immutable)fpgp.analyze;
 pragma(msg, fpga.genPrinter);
@@ -43,7 +43,7 @@ void main(string[] args) {
 	import std.algorithm:filter;
 	import std.exception;
 
-//	pragma(msg, fpga.genAST ~ fpga.genToken ~  fpga.genLex ~ fpga.genPars);
+	pragma(msg, fpga.genAST ~ fpga.genToken ~  fpga.genLex);
 
 	import std.traits;
 	if (args.length == 2) {

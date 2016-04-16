@@ -103,7 +103,7 @@ Group parse(in Token[] tokens) pure {
 			return peekMatch([TokenType.TT_16]);
 		}
 
-		bool isOptionalElement() {
+		bool isConditionalElement() {
 			return peekMatch([TokenType.TT_10]);
 		}
 
@@ -115,7 +115,7 @@ Group parse(in Token[] tokens) pure {
 		bool isPatternElement() {
 			return isQueryElement()
 				|| isNamedElement()
-				|| isOptionalElement()
+				|| isConditionalElement()
 				|| isParenElement()
 				|| isFlagElement()
 				|| isLexerElement();
@@ -169,44 +169,6 @@ Group parse(in Token[] tokens) pure {
 			return new Group(name, annotations, elements, groups);
 		}
 
-//		Group parseGroup() { 
-//			Identifier name;
-//			Identifier annotation;
-//
-//			name = parseIdentifier();
-//
-//			if (opt_match(TokenType.TT_12)) {
-//				annotation = parseIdentifier();
-//
-//			}
-//
-//			match(TokenType.TT_18);
-//			if (isGroup()) {
-//				Group[] groups;
-//
-//				while(!opt_match(TokenType.TT_19)) {
-//					groups ~= parseGroup();
-//				}
-//
-//
-//				return new Group(name, annotation, groups);
-//			} else if (isPatternElement()) {
-//
-//				PatternElement[] elements;
-//				elements ~= parsePatternElement();
-//
-//				while(opt_match(TokenType.TT_6)) {
-//					elements ~= parsePatternElement();
-//				}
-//
-//				match(TokenType.TT_19);
-//				return new Group(name, annotation, elements);
-//
-//			} else
-//				assert(0, "No Match!" ~ to!string(peekToken(-1)) ~ "  " ~ to!string(peekToken(0))  ~ "  " ~ to!string(peekToken(1)) );
-//			
-//			
-//		}
 
 		Identifier parseIdentifier() { 
 			return new Identifier(cast(string) match(TokenType.TT_Identifier).data);
@@ -219,8 +181,8 @@ Group parse(in Token[] tokens) pure {
 				p = parseQueryElement();
 			}  else if (isNamedElement()) {
 				p = parseNamedElement();
-			}  else if (isOptionalElement()) {
-				p = parseOptionalElement();
+			}  else if (isConditionalElement()) {
+				p = parseConditionalElement();
 			}  else if (isParenElement()) {
 				p = parseParenElement();
 			}  else if (isFlagElement()) {
@@ -284,7 +246,7 @@ Group parse(in Token[] tokens) pure {
 			return new NamedElement(type, age, isArray, name, lst_sep);
 		}
 
-		ConditionalElement parseOptionalElement() { 
+		ConditionalElement parseConditionalElement() { 
 			LexerElement[] ce;
 			PatternElement elem;
 
@@ -310,7 +272,7 @@ Group parse(in Token[] tokens) pure {
 
 			while(opt_match(TokenType.TT_6)) {
 				elements ~= parsePatternElement();
-      }
+      			}
 
 			match(TokenType.TT_5);
 			return new ParenElement(elements, );

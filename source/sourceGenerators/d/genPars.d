@@ -170,8 +170,7 @@ pure :
 						if (auto ne = cast(NamedElement)dE) {
 							assert(allGroups.getGroupNamed(ne.name.identifier)
 								is null
-								|| allGroups.getGroupNamed(ne.name.identifier)
-								.getDirectLeftRecursiveParent(ag.groupInformation) is null,
+								|| ag.getDirectLeftRecursiveParent(allGroups.getGroupNamed(ne.name.identifier)) is null,
 								"DirectLeftRecursion elemination failed!");
 							
 							result ~= "TokenType.TT_" ~ ne.type.identifier ~ ", ";
@@ -274,7 +273,7 @@ pure :
 		result ~= group.name.identifier.indentBy(iLvl)
 			~ " parse" ~ group.name.identifier;
 		
-		if (auto p = cast(Group) getDirectLeftRecursiveParent(group, ag.groupInformation)) {
+		if (auto p = cast(Group) ag.getDirectLeftRecursiveParent(group)) {
 			currentDirectLeftRecursiveParent = p;
 			currentGroup = cast (Group) group;
 			result ~= "(" ~ p.name.identifier ~" prev) {\n";
@@ -360,7 +359,7 @@ pure :
 			loc.index = firstToken.pos;
 `;			
 			
-			leftRecursiveElement = getDirectLeftRecursiveParent(group, ag.groupInformation) !is null;
+			leftRecursiveElement = ag.getDirectLeftRecursiveParent(group) !is null;
 			foreach(element;group.elements) {
 				result ~= genParse(element, iLvl);
 			}

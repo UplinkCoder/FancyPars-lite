@@ -26,7 +26,7 @@ static immutable locationString = q{
 
 };
 
-string enumify (const EnumifiableGroup_ g, const Group p) {
+string enumify(const EnumifiableGroup_ g, const Group parent = null) {
 	auto gid = g.name.identifier;
 	auto lgid =	(cast(char)gid[0].toLower) ~ gid[1 .. $];
 	string result  = "enum " ~ gid ~ "Enum {\n";
@@ -38,7 +38,7 @@ string enumify (const EnumifiableGroup_ g, const Group p) {
 	result ~= "}\n\n";
 
 	result ~= "final class " ~ gid 
-		~ ( p ? " : " ~ p.name.identifier : "")
+		~ ( parent ? " : " ~ parent.name.identifier : "")
 		~ " {\n\t" ~ gid ~ "Enum " ~ lgid ~ ";\n\t"
 		~ "alias " ~ lgid ~ " this;\n\n";
 
@@ -95,7 +95,7 @@ string genAST(const GrammerAnalyzer.AnalyzedGrammar ag, const Group parent = nul
 		result ~= "}\n\n";
 		
 	}
-	// this is duplicated under here
+
 	foreach(pG;ag.allGroups[1..$].filter!(g => g.hasGroups)) {
 		Group p;
 		foreach(gi;ag.groupInformation) {
