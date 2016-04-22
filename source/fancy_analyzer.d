@@ -21,14 +21,11 @@ auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGramm
 	
 	foreach(i;(p?1:0) .. cast(uint) grp.elements.length) {
 		if (grs.length>1) {
-		
-		grs = grs.filter!(g => g.elements !is null && g.elements.length > i && g !is grp)
-			.filter!(g => g.elements.length > i)
-			.filter!(g => g !is grp)
-			.filter!(g => g.elements[i].isSame(grp.elements[i]))
-			.array;
-		
-			grs = disambiguationElements_(grs, grp, i).array;
+			grs = grs.filter!(g => g.elements !is null && g.elements.length > i && g !is grp)
+				.filter!(g => g.elements.length > i)
+				.filter!(g => g !is grp)
+				.filter!(g => g.elements[i].isSame(grp.elements[i]))
+				.array;
 		} else {
 			if (cast(ConditionalElement) grp.elements[i-1]) {
 				i++;
