@@ -73,7 +73,7 @@ extern string genPars(const GrammerAnalyzer.AnalyzedGrammar ag) pure {
 			excludedGroups ~= group.groups;
 			debug {
 				import std.stdio;
-				writeln(excludedGroups.map!(a => a.name.identifier));
+				if (!__ctfe) writeln(excludedGroups.map!(a => a.name.identifier));
 			}
 		} else {
 			result ~= (!excludedGroups.canFind!((a,b) => a is b)(group) ? pg.genParse(group) : "");

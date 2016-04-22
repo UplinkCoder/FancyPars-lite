@@ -7,9 +7,9 @@ import std.range;
 import std.algorithm:filter,map,partition,sort,commonPrefix,multiSort,countUntil,any,all,joiner;
 import std.array;
 
-import fancy_grammar_patterns;
+public import fancy_grammar_patterns;
 
-private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const uint i) pure {
+private auto disambiguationElements_(const Group[] canidateGroups, const Group group, const uint i) pure {
 	assert(group.elements.length>i);
 	auto filterd = canidateGroups
 		.filter!(g => g.elements !is null && g.elements.length > i && g !is group)
@@ -179,8 +179,13 @@ const (Group) getGroupNamed(GR)(GR groupRange, const string name) if (is(Unqual!
 	return group;
 }
 
-auto orderByLength(const (Group)[] groups) {
-	auto part = (cast(Group[])groups).partition!(g => g.hasGroups);
+auto orderByLength(const(Group)[] groups) {
+	Group[] _groups;
+	foreach(g;groups) {
+		_groups ~= unQual(g);
+	}
+	
+	auto part = (_groups).partition!(g => g.hasGroups);
 	auto sortGroups = part.array;
 
 	return sortGroups
@@ -563,6 +568,16 @@ auto astMembers(const AnalyzedGrammar ag, const Group eG) pure {
 		}
 	}
 	return astMembers;
+}
+
+
+const(Group) parent(const AnalyzedGrammar ag, const Group g) pure {
+	foreach(gi;ag.groupInformation) {
+		if (gi.group is g) {
+			return gi.groupInformation.parent;
+		}
+	}
+	return null;
 }
 
 auto astMembers(const PatternElement pe) pure {

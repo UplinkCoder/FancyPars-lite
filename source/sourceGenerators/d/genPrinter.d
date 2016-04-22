@@ -84,6 +84,9 @@ string print(const `~ ag.allGroups[0].name.identifier ~` root) pure {
 	string result;
 
 	foreach(eG;ag.allGroups.getElementGroups) {
+		if (EnumifiableGroup(ag.parent(eG)))
+			continue;
+		
 		result ~= "\n\n" ~ "void print(".indentBy(2)
 			~ eG.name.identifier ~ " g) {\n";
 		foreach(elm;eG.elements) {

@@ -31,7 +31,8 @@ static immutable fpgp = fancyParsGrammar.lex.parse;
 static immutable fpga = cast(immutable)fpgp.analyze;
 pragma(msg, fpga.genPrinter);
 pragma(msg, _ag.genPrinter);
-
+pragma(msg, _ag.genPars);
+pragma(msg, fpga.genPars);
 static string lexer_blrplate_tail = `
 	return result;
 }`;
