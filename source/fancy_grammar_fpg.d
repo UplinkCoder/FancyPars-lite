@@ -1,6 +1,7 @@
 ﻿module fancy_grammar_fpg;
 
-static immutable string fancyParsGrammar  = `ASTNode {
+static immutable string fancyParsGrammar  = 
+q{ASTNode {
     Identifier @internal {
         [a-zA-Z_][] identifier
     }
@@ -71,4 +72,4 @@ static immutable string fancyParsGrammar  = `ASTNode {
  		}
 
     }
-}`;
+}};

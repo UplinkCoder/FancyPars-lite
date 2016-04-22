@@ -292,11 +292,7 @@ pure :
 				~ " " ~ group.name.identifier[0..1].toLower ~ ";\n";
 
 			result ~= `			
-			MyLocation loc;
 			auto firstToken = peekToken(0);
-			loc.line = firstToken.line;
-			loc.col = firstToken.col;
-			loc.index = firstToken.pos;
 `;			
 			result ~= "".indentBy(iLvl);
 
@@ -335,8 +331,8 @@ pure :
 					~ ");\n" ~ "} else ".indentBy(iLvl);
 			}
 			result = result[0 .. $-5] ~ "\n\n";
-			result ~= `			auto lastToken = peekToken(-1);
-			loc.length = lastToken.pos - firstToken.pos + lastToken.length;
+			result ~= `auto lastToken = peekToken(-1);
+			MyLocation loc = MyLocation(firstToken, lastToken);
 `;
 			result ~= "auto ret = ".indentBy(iLvl) 
 				~ group.name.identifier[0..1].toLower ~ ";\n";
@@ -353,19 +349,17 @@ pure :
 			}
 			result ~= "\n";
 			result ~= `			
-			MyLocation loc;
 			auto firstToken = peekToken(0);
-			loc.line = firstToken.line;
-			loc.col = firstToken.col;
-			loc.index = firstToken.pos;
+			
 `;			
 			
 			leftRecursiveElement = getDirectLeftRecursiveParent(group, ag.groupInformation) !is null;
 			foreach(element;group.elements) {
 				result ~= genParse(element, iLvl);
 			}
-			result ~= `			auto lastToken = peekToken(-1);
-			loc.length = lastToken.pos - firstToken.pos + lastToken.length;
+			result ~= `
+			auto lastToken = peekToken(-1);
+			MyLocation loc = MyLocation(firstToken, lastToken);
 `;
 			result ~= "auto ret = new ".indentBy(iLvl) 
 				~ group.name.identifier ~ "(";

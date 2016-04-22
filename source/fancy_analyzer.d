@@ -13,12 +13,7 @@ auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGramm
 	PatternElement[][] daes;
 	auto grs = cast(const(Group)[]) ag.allGroups;
 	auto p = cast (Group) getDirectLeftRecursiveParent(ag.allGroups.getGroupNamed(grp.name.identifier), ag.groupInformation);
-	
-	debug {
-		import std.stdio;
-//		writeln(grp.name.identifier ,(p ? ":" ~ p.name.identifier : ""));
-	}
-	
+		
 	foreach(i;(p?1:0) .. cast(uint) grp.elements.length) {
 		if (grs.length>1) {
 			grs = grs.filter!(g => g.elements !is null && g.elements.length > i && g !is grp)
@@ -35,10 +30,7 @@ auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGramm
 			return splitOptionals(grp.elements[0 .. i]);
 		}
 	}
-	debug {
-		import std.stdio;
-	//	writeln (grp.name.identifier ~ to!string(grp.elements.length) ~ grs.length.to!string);
-	}
+	
 	// if we get here the foreach-loop did not fire ... (we had an element count of one)
 	// HACK
 	
@@ -60,6 +52,7 @@ const (Group[]) getDirectLeftRecursiveChildren (const Group g,  const GrammerAna
 	static immutable func = assumePure(&getDirectLeftRecursiveChildren__);
 	return func(g, ag);
 }
+
 //TODO traverse Tree Top Down instead of doing all work multiple times
 const (Group[]) getDirectLeftRecursiveChildren__ (const Group g, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	const(Group)[] result;

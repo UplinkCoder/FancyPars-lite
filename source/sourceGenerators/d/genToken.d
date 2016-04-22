@@ -66,8 +66,8 @@ extern string genToken(const GrammerAnalyzer.AnalyzedGrammar ag) {
 	}
 	
 	string genTokenTypeEnum(const GrammerAnalyzer.AnalyzedGrammar ag) pure {
-		import std.conv:to;
-		
+		import std.algorithm : filter;
+		import std.conv : to;
 		string result = "enum TokenType {\n\tTT_0, // Invalid Token\n";
 		
 		foreach(rangeG;ag.allGroups.filter!(g => LexerGroup(g))) {
@@ -85,5 +85,5 @@ extern string genToken(const GrammerAnalyzer.AnalyzedGrammar ag) {
 		return result ~ "\n}\n";
 	}
 
-	return token_blrplate ~ genTokenTypeEnum(ag) ~ genTokenSize(unQual(ag.strings));
+	return genTokenTypeEnum(ag) ~ token_blrplate ~ genTokenSize(unQual(ag.strings));
 }

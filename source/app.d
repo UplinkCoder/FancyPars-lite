@@ -1,4 +1,3 @@
-
 //import sdc.terminal;
 import std.conv;
 import std.algorithm:map,sort;
@@ -29,10 +28,7 @@ static immutable _ag = cast(immutable) `Node {
 static immutable sag = cast(immutable) GrammerAnalyzer().analyze(`A {B { ? "a" : bool wasA, ? bool wasA : "b" } }`.lex.parse);
 static immutable fpgp = fancyParsGrammar.lex.parse;
 static immutable fpga = cast(immutable)fpgp.analyze;
-pragma(msg, fpga.genPrinter);
-pragma(msg, _ag.genPrinter);
-pragma(msg, _ag.genPars);
-pragma(msg, fpga.genPars);
+
 static string lexer_blrplate_tail = `
 	return result;
 }`;
@@ -44,14 +40,15 @@ void main(string[] args) {
 	import std.algorithm:filter;
 	import std.exception;
 
-//	pragma(msg, fpga.genAST ~ fpga.genToken ~  fpga.genLex ~ fpga.genPars);
-
+	pragma(msg, fpga.genToken ~ fpga.genAST ~  fpga.genLex ~ fpga.genPars);
+	mixin(fpga.genToken ~ fpga.genAST ~  fpga.genLex ~ fpga.genPars);
+	
 	import std.traits;
 	if (args.length == 2) {
 
 		enforce(args[1][$-4 .. $] == ".fpg", "files have to have the .fpg extention");
 		string grammar = readText(args[1]);
-		auto ag = GrammerAnalyzer().analyze(grammar.lex.parse);
+		auto ag = grammar.lex.parse.analyze;
 
 		string name = args[1][0 .. $-4];
 		import std.path : baseName;

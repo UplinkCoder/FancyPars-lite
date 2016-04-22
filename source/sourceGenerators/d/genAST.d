@@ -10,20 +10,19 @@ import std.string : toLower;
 import std.algorithm:filter;
 
 static immutable locationString = q{
-	struct MyLocation {
-		uint line;
-		uint col;
-		uint index;
-		uint length;
+struct MyLocation {
+	uint line;
+	uint col;
+	uint index;
+	uint length;
 		
-		this(Token first, Token last) {
-			line = first.line;
-			col = first.col;
-			index = first.pos;
-			length = (first.pos - last.pos) + last.length;
-		}
+	this(const Token first, const Token last) pure {
+		line = first.line;
+		col = first.col;
+		index = first.pos;
+		length = (first.pos - last.pos) + last.length;
 	}
-
+}
 };
 
 string enumify (const EnumifiableGroup_ g, const Group p) {
