@@ -9,18 +9,6 @@ import std.array;
 
 public import fancy_grammar_patterns;
 
-private auto disambiguationElements_(const Group[] canidateGroups, const Group group, const uint i) pure {
-	assert(group.elements.length>i);
-	auto filterd = canidateGroups
-		.filter!(g => g.elements !is null && g.elements.length > i && g !is group)
-		.filter!(g => g.elements.length > i)
-		.filter!(g => g !is group)
-		.filter!(g => g.elements[i].isSame(group.elements[i]));
-
-	return filterd;
-
-}
-
 auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	PatternElement[][] daes;
 	auto grs = cast(const(Group)[]) ag.allGroups;
@@ -33,9 +21,16 @@ auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGramm
 	
 	foreach(i;(p?1:0) .. cast(uint) grp.elements.length) {
 		if (grs.length>1) {
+		
+		grs = grs.filter!(g => g.elements !is null && g.elements.length > i && g !is grp)
+			.filter!(g => g.elements.length > i)
+			.filter!(g => g !is grp)
+			.filter!(g => g.elements[i].isSame(grp.elements[i]))
+			.array;
+		
 			grs = disambiguationElements_(grs, grp, i).array;
 		} else {
-			if (cast(ConditionalElement)grp.elements[i-1]) {
+			if (cast(ConditionalElement) grp.elements[i-1]) {
 				i++;
 			} else if (auto ne = cast(NamedElement)grp.elements[i-1]) {
 				//allGroups.getGroupNamed(ne.name.identifier)
