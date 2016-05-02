@@ -18,7 +18,7 @@ q{ASTNode {
             PatternElement[] alternatives : "/"
         }
 		
-		AnonymosuGroupElement {
+		AnonymousGroupElement {
 			"{", PatternElement[] elements : ",", "}"
 		}
 		
