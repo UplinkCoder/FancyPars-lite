@@ -125,7 +125,7 @@ string genLex(const GrammerAnalyzer.AnalyzedGrammar ag) {
 								}
 							} else {
 								//debug {import std.stdio;if (!__ctfe) {writeln(strings[i]);} }
-								result ~= "default :\n".indentBy(j+3) ~ "return TokenType.TT_".indentBy(j+3) ~ to!string(i) ~ ";\n";
+								result ~= "default :\n".indentBy(j+3) ~ "return TokenType.TT_0".indentBy(j+3) ";\n";
 							}
 						}
 					} else {
