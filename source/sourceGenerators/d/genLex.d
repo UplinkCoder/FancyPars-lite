@@ -1,4 +1,4 @@
-﻿module sourceGenerators.d.genLex;
+module sourceGenerators.d.genLex;
 import std.array;
 import std.algorithm;
 import std.range;
@@ -125,7 +125,7 @@ string genLex(const GrammerAnalyzer.AnalyzedGrammar ag) {
 								}
 							} else {
 								//debug {import std.stdio;if (!__ctfe) {writeln(strings[i]);} }
-								result ~= "default :\n".indentBy(j+3) ~ "return TokenType.TT_0".indentBy(j+3) ";\n";
+								result ~= "default :\n".indentBy(j+3) ~ "return TokenType.TT_0;\n".indentBy(j+3);
 							}
 						}
 					} else {
