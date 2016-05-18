@@ -20,7 +20,8 @@ module cbor;
 
 private import std.string : format;
 private import std.traits;
-private import std.typecons : Flag, AliasSeq;
+private import std.typecons : Flag;
+private import std.typetuple;
 private import std.range : ElementEncodingType;
 private import std.conv : to;
 private import std.utf : byChar;

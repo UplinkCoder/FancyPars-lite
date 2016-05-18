@@ -20,6 +20,7 @@ private auto disambiguationElements_(const (Group)[] canidateGroups, const Group
 	return filterd;
 
 }
+public import fancy_grammar_patterns;
 
 auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	PatternElement[][] daes;
@@ -28,9 +29,13 @@ auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGramm
 	
 	foreach(i;(p?1:0) .. cast(uint) grp.elements.length) {
 		if (grs.length>1) {
-			grs = disambiguationElements_(grs, grp, i).array;
+			grs = grs.filter!(g => g.elements !is null && g.elements.length > i && g !is grp)
+				.filter!(g => g.elements.length > i)
+				.filter!(g => g !is grp)
+				.filter!(g => g.elements[i].isSame(grp.elements[i]))
+				.array;
 		} else {
-			if (cast(ConditionalElement)grp.elements[i-1]) {
+			if (cast(ConditionalElement) grp.elements[i-1]) {
 				i++;
 			} else if (auto ne = cast(NamedElement)grp.elements[i-1]) {
 				//allGroups.getGroupNamed(ne.name.identifier)
@@ -60,6 +65,7 @@ const (Group[]) getDirectLeftRecursiveChildren (const Group g,  const GrammerAna
 	static immutable func = assumePure(&getDirectLeftRecursiveChildren__);
 	return func(g, ag);
 }
+
 //TODO traverse Tree Top Down instead of doing all work multiple times
 const (Group[]) getDirectLeftRecursiveChildren__ (const Group g, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	const(Group)[] result;
@@ -171,8 +177,13 @@ const (Group) getGroupNamed(GR)(GR groupRange, const string name) if (is(Unqual!
 	return group;
 }
 
-auto orderByLength(const (Group)[] groups) {
-	auto part = (cast(Group[])groups).partition!(g => g.hasGroups);
+auto orderByLength(const(Group)[] groups) {
+	Group[] _groups;
+	foreach(g;groups) {
+		_groups ~= unQual(g);
+	}
+	
+	auto part = (_groups).partition!(g => g.hasGroups);
 	auto sortGroups = part.array;
 
 	return sortGroups
@@ -555,6 +566,16 @@ auto astMembers(const AnalyzedGrammar ag, const Group eG) pure {
 		}
 	}
 	return astMembers;
+}
+
+
+const(Group) parent(const AnalyzedGrammar ag, const Group g) pure {
+	foreach(gi;ag.groupInformation) {
+		if (gi.group is g) {
+			return gi.groupInformation.parent;
+		}
+	}
+	return null;
 }
 
 auto astMembers(const PatternElement pe) pure {

@@ -21,7 +21,7 @@
 				}  
 			}
 +/
-static immutable string fancyParsGrammar  = `
+static immutable string fancyParsGrammar  = q{
 ASTNode {
     Identifier @internal {
         [a-zA-Z_][] identifier
@@ -38,7 +38,7 @@ ASTNode {
             PatternElement[] alternatives : "/"
         }
 		
-		AnonymosuGroupElement {
+		AnonymousGroupElement {
 			"{", PatternElement[] elements : ",", "}"
 		}
 		
@@ -92,4 +92,4 @@ ASTNode {
  		}
 
     }
-}`;
+}};

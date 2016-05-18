@@ -68,7 +68,7 @@ abstract class PatternElement : ASTNode {
 	}
 
 	override string toString() pure {
-		return "";
+		assert(0, "toString has to be overriden");
 	}
 	
 //	bool opEquals(PatternElement rhs) pure {		

@@ -1,6 +1,7 @@
 import fancy_token;
 import fancy_ast;
 import std.conv;
+
 Group parse(in Token[] tokens) pure { 
 	struct Parser {
 	pure :
@@ -153,8 +154,7 @@ Group parse(in Token[] tokens) pure {
 				}
 			}
 			match(TokenType.TT_18);
-			if (isPatternElement()) {
-				
+			if (isPatternElement()) {				
 				elements ~= parsePatternElement();
 				while(opt_match(TokenType.TT_6)) {
 					elements ~= parsePatternElement();
@@ -168,7 +168,6 @@ Group parse(in Token[] tokens) pure {
 			
 			return new Group(name, annotations, elements, groups);
 		}
-
 
 		Identifier parseIdentifier() { 
 			return new Identifier(cast(string) match(TokenType.TT_Identifier).data);
@@ -192,7 +191,7 @@ Group parse(in Token[] tokens) pure {
 			//}  else if (isAnonymousGroupElement) {
 			//	p = parseAnonymousGroupElement;
 			} else
-				assert(0, "No Matching PatternElement" ~to!string (lastMatched.line) );
+				assert(0, "No Matching PatternElement" ~ to!string (lastMatched.line) );
 
 			if (peekMatch([TokenType.TT_8]) && !inAlternative) {
 				return parseAlternativeElement(p);
@@ -228,7 +227,7 @@ Group parse(in Token[] tokens) pure {
 			} else if (isAnonymousGroupElement()) {
 				age = parseAnonymousGroupElement();
 			}
-			debug {import std.stdio;if(!__ctfe && age !is null)writeln(age.elements);}
+
 			if (opt_match(TokenType.TT_14)) {
 				isArray = true;
 			}
@@ -238,7 +237,6 @@ Group parse(in Token[] tokens) pure {
 			if (isArray == true) {
 				if (opt_match(TokenType.TT_9)) {
 					lst_sep = parseStringElement();
-
 				}
 
 			}
@@ -272,7 +270,7 @@ Group parse(in Token[] tokens) pure {
 
 			while(opt_match(TokenType.TT_6)) {
 				elements ~= parsePatternElement();
-      			}
+			}
 
 			match(TokenType.TT_5);
 			return new ParenElement(elements, );
