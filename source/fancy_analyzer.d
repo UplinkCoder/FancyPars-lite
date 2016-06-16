@@ -7,19 +7,6 @@ import std.range;
 import std.algorithm:filter,map,partition,sort,commonPrefix,multiSort,countUntil,any,all,joiner;
 import std.array;
 
-import fancy_grammar_patterns;
-
-private auto disambiguationElements_(const (Group)[] canidateGroups, const Group group, const uint i) pure {
-	assert(group.elements.length>i);
-	auto filterd = canidateGroups
-		.filter!(g => g.elements !is null)
-//		.filter!(g => g.elements.length > i)
-		.filter!(g => g !is group)
-		.filter!(g => g.elements[i].isSame(group.elements[i]));
-
-	return filterd;
-
-}
 public import fancy_grammar_patterns;
 
 auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGrammar ag) {
