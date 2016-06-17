@@ -12,7 +12,8 @@ public import fancy_grammar_patterns;
 auto disambiguationElements(const Group grp, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	PatternElement[][] daes;
 	auto grs = cast(const(Group)[]) ag.allGroups;
-	auto p = cast (Group) ag.getDirectLeftRecursiveParent(ag.allGroups.getGroupNamed(grp.name.identifier));
+	//ag.allGroups.getGroupNamed(grp.name.identifier)
+	auto p = cast (Group) grp.getDirectLeftRecursiveParent(ag);
 	
 	foreach(i;(p?1:0) .. cast(uint) grp.elements.length) {
 		if (grs.length>1) {
@@ -57,19 +58,19 @@ const (Group[]) getDirectLeftRecursiveChildren (const Group g,  const GrammerAna
 const (Group[]) getDirectLeftRecursiveChildren__ (const Group g, const GrammerAnalyzer.AnalyzedGrammar ag) {
 	const(Group)[] result;
 	foreach(group;ag.allGroups) {
-		if (ag.getDirectLeftRecursiveParent(group) is g) {
+		if (group.getDirectLeftRecursiveParent(ag) is g) {
 			result ~= group;
 		}
 	}
 	
 	return cast(const(Group[])) (result.length ? result : null);
 }
-const (Group) getDirectLeftRecursiveParent (const AnalyzedGrammar ag, const Group g) pure {
+const (Group) getDirectLeftRecursiveParent (const Group g, const AnalyzedGrammar ag) pure {
 	static immutable func = assumePure(&getDirectLeftRecursiveParent__);
-	return func(ag, g);
+	return func(g, ag);
 }
 
-const (Group) getDirectLeftRecursiveParent__ (const AnalyzedGrammar ag, const Group g) pure {
+const (Group) getDirectLeftRecursiveParent__ (const Group g, const AnalyzedGrammar ag) pure {
 	const (Group) getDirectLeftRecursiveParent_(const NamedElement ne, const Group p) {
 		Group parent;
 		foreach(gi;ag.groupInformation) {

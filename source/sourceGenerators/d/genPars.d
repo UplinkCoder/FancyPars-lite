@@ -130,7 +130,7 @@ pure :
 			return "TokenType.TT_" ~ parent.name.identifier;
 			//assert(0, "Trying to match unknown LexerGroup " ~ (cast(Group)(re.parent)).name.identifier);
 		} else {
-			return "";
+//			return "";
 			assert (0, "we sould never get here");
 		}
 
@@ -168,9 +168,9 @@ pure :
 					foreach(dE;dEs) {
 						//	debug {import std.stdio; writeln(cG.name.identifier, " dE: ",cast(PatternElement)dE);}
 						if (auto ne = cast(NamedElement)dE) {
-							assert(allGroups.getGroupNamed(ne.name.identifier)
-								is null
-								|| ag.getDirectLeftRecursiveParent(allGroups.getGroupNamed(ne.name.identifier)) is null,
+							auto ng = allGroups.getGroupNamed(ne.name.identifier); 
+							assert(ng is null
+								|| ng.getDirectLeftRecursiveParent(ag) is null,
 								"DirectLeftRecursion elemination failed!");
 							
 							result ~= "TokenType.TT_" ~ ne.type.identifier ~ ", ";
@@ -273,7 +273,7 @@ pure :
 		result ~= group.name.identifier.indentBy(iLvl)
 			~ " parse" ~ group.name.identifier;
 		
-		if (auto p = cast(Group) ag.getDirectLeftRecursiveParent(group)) {
+		if (auto p = cast(Group) group.getDirectLeftRecursiveParent(ag)) {
 			currentDirectLeftRecursiveParent = p;
 			currentGroup = cast (Group) group;
 			result ~= "(" ~ p.name.identifier ~" prev) {\n";
@@ -330,7 +330,8 @@ pure :
 					~ ");\n" ~ "} else ".indentBy(iLvl);
 			}
 			result = result[0 .. $-5] ~ "\n\n";
-			result ~= `auto lastToken = peekToken(-1);
+			result ~= `
+			auto lastToken = peekToken(-1);
 			MyLocation loc = MyLocation(firstToken, lastToken);
 `;
 			result ~= "auto ret = ".indentBy(iLvl) 
@@ -352,7 +353,7 @@ pure :
 			
 `;			
 			
-			leftRecursiveElement = ag.getDirectLeftRecursiveParent(group) !is null;
+			leftRecursiveElement = group.getDirectLeftRecursiveParent(ag) !is null;
 			foreach(element;group.elements) {
 				result ~= genParse(element, iLvl);
 			}

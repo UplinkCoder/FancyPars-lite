@@ -40,10 +40,10 @@ void main(string[] args) {
 	import std.algorithm:filter;
 	import std.exception;
 
-	pragma(msg, fpga.genAST ~ fpga.genToken ~  fpga.genLex);
+//	pragma(msg, fpga.genAST ~ fpga.genToken ~  fpga.genLex);
 
-	pragma(msg, fpga.genToken ~ fpga.genAST ~  fpga.genLex ~ fpga.genPars);
-	mixin(fpga.genToken ~ fpga.genAST ~  fpga.genLex ~ fpga.genPars);
+//	pragma(msg, fpga.genToken ~ fpga.genAST ~  fpga.genLex ~ fpga.genPars);
+//	mixin(fpga.genToken ~ fpga.genAST ~  fpga.genLex ~ fpga.genPars);
 	
 	import std.traits;
 	if (args.length == 2) {
@@ -67,10 +67,7 @@ void main(string[] args) {
 		lexer.writeln("import " ~ basename ~ "_token;\n", lexer_blrplate_head, ag.genLex(), lexer_blrplate_tail);
 		parser.writeln("import " ~ basename ~ "_token;\nimport " ~ basename ~ "_ast;\n", ag.genPars());
 		printer.writeln("import " ~ basename ~ "_ast;\n", ag.genPrinter());
-
-		foreach(e;ag.allElements.filter!(e => cast(AnonymousGroupElement)e)) {
-			writeln(cast(PatternElement)e);
-		}
+		
 	}
 	
 }
