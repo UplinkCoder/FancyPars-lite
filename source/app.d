@@ -29,10 +29,6 @@ static immutable sag = `A {B { ? "a" : bool wasA, ? bool wasA : "b" } }`.lex.par
 static immutable fpgp = fancyParsGrammar.lex.parse;
 static immutable fpga = cast(immutable)fpgp.analyze;
 
-static string lexer_blrplate_tail = `
-	return result;
-}`;
-
 void main(string[] args) {
 
 	import std.stdio;
@@ -64,7 +60,7 @@ void main(string[] args) {
 
 		token.writeln(ag.genToken());
 		ast.writeln("import " ~ basename ~ "_token;\n" ~ ag.genAST);
-		lexer.writeln("import " ~ basename ~ "_token;\n", lexer_blrplate_head, ag.genLex(), lexer_blrplate_tail);
+		lexer.writeln("import " ~ basename ~ "_token;\n", ag.genLex());
 		parser.writeln("import " ~ basename ~ "_token;\nimport " ~ basename ~ "_ast;\n", ag.genPars());
 		printer.writeln("import " ~ basename ~ "_ast;\n", ag.genPrinter());
 		
