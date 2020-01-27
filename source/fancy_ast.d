@@ -62,7 +62,7 @@ class Group : ASTNode {
 }
 abstract class PatternElement : ASTNode {
 	ASTNode parent;
-	override bool opEquals(Object o) pure {
+	override bool opEquals(Object o) {
 		auto pe = (cast(PatternElement)o);
 		return (pe ? opEquals(pe) : false);
 	}
@@ -119,12 +119,12 @@ class AnonymousGroupElement : PatternElement {
 
 	alias opEquals = PatternElement.opEquals;
 	
-	override bool opEquals(Object o) pure {
+	override bool opEquals(Object o) {
 		auto age = (cast(AnonymousGroupElement)o);
 		return (age ? opEquals(age) : false);
 	}
 
-	bool opEquals(AnonymousGroupElement rhs) pure {		
+	bool opEquals(AnonymousGroupElement rhs) {		
 		return this.elements == rhs.elements;
 	}
 }
@@ -299,12 +299,12 @@ class ConditionalElement : PatternElement {
 		return cast(string) ("? "  ~ ce[0].toString ~ " : " ~ elem.toString); 
 	}
 
-	override bool opEquals(Object o) pure {
+	override bool opEquals(Object o) {
 		auto oe = (cast(ConditionalElement)o);
 		return (oe ? opEquals(oe) : false);
 	}
 	
-	bool opEquals(ConditionalElement rhs) pure {		
+	bool opEquals(ConditionalElement rhs) {		
 		return this.ce == rhs.ce;
 	}
 
