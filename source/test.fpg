@@ -1,0 +1,35 @@
+RootNode
+{
+    Desc @parent {
+	    ? "FromInput" : ( "{", Parameter[] parameterList : ";", "}" ),
+		    Statement[] staements;
+    }
+	Parameter @internal {
+		Identifier name, ":", Type type
+	}
+	
+	Identifier @internal {
+		[a-zA-Z] identifer;
+	}
+	
+	Type @internal {
+		"string" / "int32"
+	}
+	Statement @internal
+	{
+		IfStatement
+		{
+			"if", "(", Expression expr, ")", Statement stmt
+		}
+		BlockStatement
+		{
+			"{", Statement[] statement : ";", "}"
+		} 
+		AddToBodyStatement
+		{
+			"addToBody", "(", { "\"", char[] fstring, "\""}, ? "," : ( Identifier[] vars : "," ), ")"
+		}
+			
+	}
+	
+}
