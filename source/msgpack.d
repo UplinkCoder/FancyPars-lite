@@ -1759,7 +1759,7 @@ else
         {
             assert(target.length);
         }
-        body
+        do
         {
             /*
              * Expands internal buffer.
@@ -3617,7 +3617,7 @@ struct Value
                     ret ^= value.toHash();
                 }
                 return ret;
-            } catch assert(0);
+            } catch (Throwable t) { assert(0); }
         }
     }
 }

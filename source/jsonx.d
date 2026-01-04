@@ -5,7 +5,7 @@ import std.ascii : isControl, isUpper, isDigit, isHexDigit, isWhite;
 import std.conv;
 import std.range;
 import std.traits;
-import std.exception : enforceEx;
+import std.exception : enforceEx = enforce;
 import std.variant;
 import std.stdio;
 

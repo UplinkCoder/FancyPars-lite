@@ -91,7 +91,7 @@ align(1) struct CborValue
 	 *  type  = the type of value.
 	 */
 	@safe
-	this(Type type = Type.nil)
+	this(Type type)
 	{
 		this.type = type;
 	}
